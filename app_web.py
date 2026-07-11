@@ -20,17 +20,22 @@ if not st.session_state.authenticated:
     st.title("КУПРА&СЕАТ Центр Київ")
     st.subheader("Авторизація співробітника сервісу")
     
+    # Исправленное чтение параметров ссылки под новые стандарты Streamlit
+    saved_last = st.query_params.get("last_name", "")
+    saved_first = st.query_params.get("first_name", "")
+    
     # Раздельные поля ввода
-    last_name = st.text_input("Прізвище *", value=st.experimental_get_query_params().get("last_name", [""])[0])
-    first_name = st.text_input("Ім'я *", value=st.experimental_get_query_params().get("first_name", [""])[0])
+    last_name = st.text_input("Прізвище *", value=saved_last)
+    first_name = st.text_input("Ім'я *", value=saved_first)
     
     if st.button("ВХІД", type="primary"):
         if last_name and first_name:
             st.session_state.authenticated = True
             st.session_state.user_full_name = f"{last_name} {first_name}"
-            # Браузер запомнит пользователя через параметры ссылки
-            st.experimental_set_query_params(last_name=last_name, first_name=first_name)
-            st.experimental_rerun()
+            # Браузер надежно запомнит пользователя прямо в адресной строке
+            st.query_params["last_name"] = last_name
+            st.query_params["first_name"] = first_name
+            st.rerun()
         else:
             st.error("Поля Прізвище та Ім'я є обов'язковими!")
     st.stop()
@@ -44,7 +49,7 @@ tab_record, tab_warehouse, tab_monitor = st.tabs(["Запис", "Склад 📦
 # --- ВКЛАДКА 1: ЗАПИС ---
 with tab_record:
     st.header("Прийом авто (На сьогодні)")
-    col_form, col_table = st.columns([2, 4])
+    col_form, col_table = st.columns()
     
     with col_form:
         num = st.text_input("Номер машини *")
@@ -60,7 +65,7 @@ with tab_record:
                     "area": "Сервіс", "post": "Не призначено", "start_time": datetime.datetime.now().strftime("%H:%M"),
                     "end_time": None, "wh_status": "Новий", "status": "В ремонті"
                 })
-                st.experimental_rerun()
+                st.rerun()
         if col_btn2.button("ЗАПИСАТИ"):
             if num and req:
                 st.session_state.db.append({
@@ -68,7 +73,7 @@ with tab_record:
                     "area": "Сервіс", "post": "Не призначено", "start_time": time_slot,
                     "end_time": None, "wh_status": "Новий", "status": "Запис"
                 })
-                st.experimental_rerun()
+                st.rerun()
 
     with col_table:
         st.subheader("Журнал записів")
@@ -80,24 +85,22 @@ with tab_warehouse:
     active_repairs = [c for c in st.session_state.db if c["status"] == "В ремонті" and c["wh_status"] != "Видалено"]
     
     for car in active_repairs:
-        col_c1, col_c2, col_c3, col_c4 = st.columns([2, 2, 2, 2])
+        col_c1, col_c2, col_c3, col_c4 = st.columns()
         col_c1.markdown(f"**{car['car_number']}**")
         col_c2.write(f"{car['model']}")
         col_c3.write(f"📄 {car['request']}")
         
-        # Интерактивная кнопка склада
         btn_label = "ВЗЯТИ В РОБОТУ" if car["wh_status"] == "Новий" else "ЗБИРАЄТЬСЯ" if car["wh_status"] == "Збирається" else "ЗІБРАНО ✓"
         if col_c4.button(btn_label, key=f"wh_{car['id']}"):
             if car["wh_status"] == "Новий": car["wh_status"] = "Збирається"
             elif car['wh_status'] == "Збирається": car['wh_status'] = "Зібрано"
-            st.experimental_rerun()
+            st.rerun()
 
 # --- ВКЛАДКА 3: ИНФО МОНИТОР ---
 with tab_monitor:
     st.header("🖥️ СЕРВІСНА ЗОНА (Широкі картки списком)")
     
     for car in st.session_state.db:
-        # Стилизация карточек под оригинальный светлый стиль дилера
         with st.container():
             st.markdown(f"""
             <div style="background-color: white; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
@@ -107,6 +110,6 @@ with tab_monitor:
             </div>
             """, unsafe_allow_html=True)
 
-# Автоматический перезапуск страницы для имитации таймера обновления
-time.sleep(2)
-st.experimental_rerun()
+# Автоматический перезапуск страницы раз в 3 секунды для имитации таймера обновления
+time.sleep(3)
+st.rerun()
