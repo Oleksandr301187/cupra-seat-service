@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>СЕРВІС | Електронна Черга</title>
+    <style>
+        /* Тут усі твої стилі, які ми відлагодили раніше */
+        body { font-family: sans-serif; background: #0b0e14; color: white; height: 100vh; overflow: hidden; }
+        #loginScreen { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-box { background: #161c24; padding: 40px; border-radius: 16px; width: 400px; }
+        #appInterface { display: none; height: 100vh; flex-direction: column; }
+    </style>
+</head>
+<body>
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2 style="text-align:center;">АВТОРИЗАЦІЯ</h2>
+            <form id="loginForm" onsubmit="event.preventDefault(); doLogin();">
+                <input type="text" id="userLastName" placeholder="Прізвище" required>
+                <input type="text" id="userFirstName" placeholder="Ім'я" required>
+                <button type="submit">Увійти</button>
+            </form>
+        </div>
+    </div>
+    <div id="appInterface">
+        <div class="user-status-bar">
+            <div class="brand-badge-header">СЕРВІС</div>
+            <button onclick="doLogout()">◀ Вихід</button>
+        </div>
+        <!-- Вміст вкладок -->
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        function doLogin() {
+            const ln = document.getElementById('userLastName').value;
+            const fn = document.getElementById('userFirstName').value;
+            const role = document.getElementById('userRole').value;
+            socket.emit('registerUser', { lastName: ln, firstName: fn, role: role });
+        }
+        
+        socket.on('loginSuccess', (user) => {
+            console.log("Успішний вхід:", user);
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appInterface').style.display = 'flex';
+        });
+
+        function doLogout() { socket.emit('logoutUser'); location.reload(); }
+    </script>
+</body>
+</html>
