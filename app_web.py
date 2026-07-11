@@ -49,7 +49,8 @@ tab_record, tab_warehouse, tab_monitor = st.tabs(["Запис", "Склад 📦
 # --- ВКЛАДКА 1: ЗАПИС ---
 with tab_record:
     st.header("Прийом авто (На сьогодні)")
-    col_form, col_table = st.columns()
+    # ИСПРАВЛЕНО: Добавили (2) внутрь скобок, чтобы Streamlit знал точное число колонок
+    col_form, col_table = st.columns(2)
     
     with col_form:
         num = st.text_input("Номер машини *")
@@ -57,6 +58,7 @@ with tab_record:
         model = st.text_input("Модель авто (опціонально)")
         time_slot = st.selectbox("Час візиту", [f"{h:02d}:{m:02d}" for h in range(9, 18) for m in (0, 30)])
         
+        # ИСПРАВЛЕНО: Добавили (2) для колонок кнопок
         col_btn1, col_btn2 = st.columns(2)
         if col_btn1.button("ВЗЯТИ В РОБОТУ"):
             if num and req:
@@ -85,7 +87,8 @@ with tab_warehouse:
     active_repairs = [c for c in st.session_state.db if c["status"] == "В ремонті" and c["wh_status"] != "Видалено"]
     
     for car in active_repairs:
-        col_c1, col_c2, col_c3, col_c4 = st.columns()
+        # ИСПРАВЛЕНО: Задали точное число колонок (4) для строк склада
+        col_c1, col_c2, col_c3, col_c4 = st.columns(4)
         col_c1.markdown(f"**{car['car_number']}**")
         col_c2.write(f"{car['model']}")
         col_c3.write(f"📄 {car['request']}")
