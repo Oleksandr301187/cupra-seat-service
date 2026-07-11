@@ -10,14 +10,13 @@
         
         /* ЗОБРАЖЕННЯ ТА ШКАЛА ПРИ ЗАВАНТАЖЕННІ (SPLASH SCREEN) 
         } 
-        
-#splashScreen { 
+    #splashScreen { 
     position: fixed; 
     top: 0; 
     left: 0; 
     width: 100vw; 
     height: 100vh; 
-    /* Ось тут ми підключаємо вашу нову картинку */
+    /* Обов'язково перевірте, щоб усі властивості закінчувалися ; */
     background: #000000 url('bg-loading.jpg') center/cover no-repeat; 
     display: flex; 
     flex-direction: column;
@@ -26,7 +25,6 @@
     z-index: 9999; 
     transition: opacity 0.8s ease-out; 
 }
-
         /* Оверлей для покращення читабельності */
         #splashScreen::before {
             content: '';
