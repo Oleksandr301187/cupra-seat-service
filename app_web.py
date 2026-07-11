@@ -2,7 +2,7 @@ import streamlit as st
 import datetime
 import time
 
-# НАЛАШТУВАННЯ СТРАНІЦІ БРАУЗЕРА
+# НАЛАШТУВАННЯ СТРАНИЦІ БРАУЗЕРА
 st.set_page_config(page_title="КУПРА&СЕАТ Центр Київ", layout="wide")
 
 # Стилізація інтерфейсу під світлий дилерський стандарт КУПРА
