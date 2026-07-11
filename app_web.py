@@ -14,12 +14,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ПОСТІЙНА БАЗА ДАНИХ (ПРАЦЮЄ ЧЕРЕЗ СКРИН СЕСІЇ СЕРВЕРА)
+# ПОСТІЙНА ТА НАДІЙНА БАЗА ДАНИХ У ПАМ'ЯТІ ВЕБ-СЕРВЕРА
 if "global_db" not in st.session_state:
     st.session_state.global_db = [
-        {"id": 1, "car_number": "AA 1234 BB", "model": "Cupra Formentor", "request": "ЗН-00124", "area": "Сервіс", "post": "Підйомник 1", "start_time": (datetime.datetime.now() - datetime.timedelta(hours=2, minutes=15)).strftime("%Y-%m-%dT%H:%M:00"), "end_time": None, "wh_status": "Новий", "wh_end_time": None, "status": "В ремонті"},
-        {"id": 2, "car_number": "BC 7788 CA", "model": "SEAT Leon", "request": "ЗН-00125", "area": "Сервіс", "post": "Не призначено", "start_time": (datetime.datetime.now() + datetime.timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:00"), "end_time": None, "wh_status": "Новий", "wh_end_time": None, "status": "Запис"},
-        {"id": 3, "car_number": "AI 5505 EE", "model": "Cupra Ateca", "request": "ЗН-00110", "area": "Кузовний", "post": "Кузовний", "start_time": (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:00"), "end_time": None, "wh_status": "Збирається", "wh_end_time": None, "status": "В ремонті"}
+        {"id": 1, "car_number": "AA 1234 BB", "model": "Cupra Formentor", "request": "ЗН-00124", "area": "Сервіс", "post": "Підйомник 1", "start_time": (datetime.datetime.now() - datetime.timedelta(hours=2, minutes=15)).isoformat(), "end_time": None, "wh_status": "Новий", "wh_end_time": None, "status": "В ремонті"},
+        {"id": 2, "car_number": "BC 7788 CA", "model": "SEAT Leon", "request": "ЗН-00125", "area": "Сервіс", "post": "Не призначено", "start_time": (datetime.datetime.now() + datetime.timedelta(hours=1)).isoformat(), "end_time": None, "wh_status": "Новий", "wh_end_time": None, "status": "Запис"},
+        {"id": 3, "car_number": "AI 5505 EE", "model": "Cupra Ateca", "request": "ЗН-00110", "area": "Кузовний", "post": "Кузовний", "start_time": (datetime.datetime.now() - datetime.timedelta(days=1)).isoformat(), "end_time": None, "wh_status": "Збирається", "wh_end_time": None, "status": "В ремонті"}
     ]
 
 # Список майстрів
@@ -65,8 +65,9 @@ if not st.session_state.authenticated:
 st.title("КУПРА&СЕАТ Центр Київ")
 st.caption(f"Користувач: {st.session_state.user_full_name} | Поточний час: {datetime.datetime.now().strftime('%H:%M')}")
 
-# АВТОВИДАЛЕННЯ ЗАВЕРШЕНИХ ЗА 15 ХВИЛИН
 now = datetime.datetime.now()
+
+# АВТОВИДАЛЕННЯ ЗАВЕРШЕНИХ ЗА 15 ХВИЛИН
 for car in st.session_state.global_db[:]:
     if car['status'] == "Завершено" and car['end_time']:
         if (now - datetime.datetime.fromisoformat(car['end_time'])).total_seconds() >= 900:
@@ -105,7 +106,7 @@ with tab_record:
         if col_btn2.button("ЗАПИСАТИ НА СЬОГОДНІ"):
             if num_in and req_in:
                 p_hour, p_min = map(int, time_slot.split(":"))
-                p_time = datetime.datetime.now().replace(hour=p_hour, minute=p_min, second=0).isoformat()
+                p_time = datetime.datetime.now().replace(hour=p_hour, minute=p_min, second=0, microsecond=0).isoformat()
                 st.session_state.global_db.append({
                     "id": int(time.time()), "car_number": num_in, "model": model_in or "-", "request": req_in,
                     "area": "Сервіс", "post": "Не призначено", "start_time": p_time,
@@ -145,7 +146,6 @@ with tab_warehouse:
             c2.write(f"**{car['model']}**\n📄 {car['request']}")
             c3.write(f"📍 Пост: {car['post']}")
             
-            # Покроковий перемикач кнопки складу
             if car['wh_status'] == "Новий":
                 if c4.button("ВЗЯТИ В РОБОТУ 🟢", key=f"wh_btn_{car['id']}", use_container_width=True):
                     car['wh_status'] = "Збирається"
@@ -167,22 +167,21 @@ with tab_monitor:
     for car in st.session_state.global_db:
         start_dt = datetime.datetime.fromisoformat(car['start_time'])
         
-        # Визначення кольорів та часу
         if car['status'] == "В ремонті":
             diff = now - start_dt
             if diff.total_seconds() >= 86400:
                 days = diff.days; hours, remainder = divmod(diff.seconds, 3600); minutes, _ = divmod(remainder, 60)
                 time_str = f"{days} дн. {hours} год. {minutes} хв."
-                border_c, bg_c, text_c = "#fed7aa", "#fff7ed", "#ea580c" # Помаранчевий довгобуд
+                border_c, bg_c, text_c = "#fed7aa", "#fff7ed", "#ea580c"
             else:
                 hours, remainder = divmod(int(diff.total_seconds()), 3600); minutes, _ = divmod(remainder, 60)
                 time_str = f"{hours:02d}:{minutes:02d}"
-                border_c, bg_c, text_c = "#e2e8f0", "white", "#38a169" # Зелений стандартний
+                border_c, bg_c, text_c = "#e2e8f0", "white", "#38a169"
             st_text = "В роботі:"
             
         elif car['status'] == "Завершено":
             time_str = "Готово до видачі"
-            border_c, bg_c, text_c = "#a7f3d0", "#f0fdf4", "#10b981" # Ніжно-зелений фінал
+            border_c, bg_c, text_c = "#a7f3d0", "#f0fdf4", "#10b981"
             st_text = "Ремонт:"
             
         else: # Запис
@@ -191,3 +190,7 @@ with tab_monitor:
                 border_c, bg_c, text_c = "#fca5a5", "#fef2f2", "#dc2626"
             else:
                 diff = start_dt - now; hours, remainder = divmod(int(diff.total_seconds()), 3600); minutes, _ = divmod(remainder, 60)
+                time_str = f"На {start_dt.strftime('%H:%M')} (через {hours}г. {minutes}х.)"
+                border_c, bg_c, text_c = "#bfdbfe", "white", "#2563eb"
+            st_text = "Запис:"
+
