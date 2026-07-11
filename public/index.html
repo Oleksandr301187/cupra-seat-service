@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>SEAT & CUPRA ЦЕНТР КИЇВ | Електронна Черга</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #0b0e14; color: white; height: 100vh; overflow: hidden; }
+        select, input { background: #1e293b; color: white; border: 1px solid #475569; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; box-sizing: border-box; }
+        .btn-universal { border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; color: white; transition: 0.2s; }
+        
+        /* ВІДЕО-ЗАСТАВКА */
+        #splashScreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000000; display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease-out; }
+        #splashVideo { width: 100%; height: 100%; object-fit: cover; }
+
+        /* ЕКРАН ЛОГІНУ */
+        #loginScreen { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; background: #0b0e14; }
+        .login-box { background: #161c24; padding: 40px; border-radius: 16px; border: 1px solid #222; width: 450px; position: relative; }
+        .login-box h2 { margin-top: 0; font-size: 26px; text-align: center; border-bottom: 2px solid #ff4d4d; padding-bottom: 15px; margin-bottom: 25px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; position: relative; }
+        .form-group label { font-size: 13px; color: #94a3b8; font-weight: bold; text-transform: uppercase; }
+        .btn-login { background: #ff4d4d; width: 100%; padding: 15px; font-size: 18px; margin-top: 10px; }
+
+        .autocomplete-suggestions { position: absolute; top: 68px; left: 0; width: 100%; background: #1e293b; border: 1px solid #475569; border-radius: 4px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
+        .suggestion-item { padding: 10px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .suggestion-item:hover { background: #ff4d4d; color: white; }
+
+        /* ВНУТРІШНІЙ ІНТЕРФЕЙС */
+        #appInterface { display: none; height: 100vh; flex-direction: column; }
+        .user-status-bar { background: #161c24; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #222; font-size: 16px; font-weight: bold; }
+        .brand-badge-header { font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: 1px; }
+        .brand-badge-header span { color: #ff4d4d; }
+        .user-info-name { color: #2cfc7d; }
+        .btn-logout { background: #334155; padding: 8px 16px; font-size: 14px; border: 1px solid #475569; }
+        .btn-logout:hover { background: #dc3545; border-color: #dc3545; }
+        .tab-content { display: none; flex: 1; height: calc(100vh - 55px); box-sizing: border-box; overflow: hidden; }
+
+        /* ДИЗАЙН ВКЛАДОК */
+        .admin-layout { display: flex; width: 100%; height: 100%; background: #11151d; }
+        .admin-left { width: 70%; padding: 20px; box-sizing: border-box; overflow-y: auto; border-right: 2px solid #222; }
+        .admin-right { width: 30%; padding: 20px; box-sizing: border-box; overflow-y: auto; background: #161c24; }
+        .admin-nav { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 2px solid #222; padding-bottom: 10px; }
+        .admin-tab-btn { background: #2d3748; color: white; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .admin-tab-btn.active { background: #ff4d4d; }
+
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; background: #1c232e; }
+        .admin-table th, .admin-table td { padding: 10px; border-bottom: 1px solid #2d3748; }
+        .admin-table th { background: #1e293b; color: #94a3b8; }
+        .admin-input-inline { background: #0b0e14; border: 1px solid #475569; color: white; padding: 5px; border-radius: 4px; font-size: 13px; width: 90%; font-weight: bold; }
+        .admin-select-inline { background: #0b0e14; border: 1px solid #475569; color: white; padding: 4px; border-radius: 4px; font-size: 12px; width: 100%; font-weight: bold; }
+        .staff-item { display: flex; justify-content: space-between; background: #1e293b; padding: 10px; border-radius: 6px; margin-bottom: 8px; align-items: center; font-weight: bold; }
+        .btn-danger { background: #dc3545; padding: 4px 8px; font-size: 12px; }
+
+        .stats-container { display: flex; gap: 15px; margin-bottom: 15px; padding: 0 5px; }
+        .stat-card { flex: 1; padding: 12px 18px; border-radius: 6px; font-weight: bold; font-size: 14px; background: #161c24; border: 1px solid #333; }
+        .stat-blue { border-color: #007bff; background: #112233; }
+        .stat-yellow { border-color: #ffcc00; background: #1a1510; }
+
+        .service-layout { display: flex; width: 100%; height: 100%; background: #f4f6f9; color: #1e293b; }
+        .srv-left, .srv-right { width: 50%; padding: 25px; box-sizing: border-box; overflow-y: auto; }
+        .srv-left { background: white; border-right: 2px solid #e0e0e0; }
+        .srv-table { width: 100%; border-collapse: collapse; background: white; font-size: 14px; }
+        .srv-table th, .srv-table td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        .srv-table th { background: #002e3b; color: white; }
+        .badge-status { padding: 3px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase; }
+        .badge-working { background: #d1ecf1; color: #0c5460; }
+        .badge-waiting { background: #fff3cd; color: #856404; }
+        .badge-completed { background: #d4edda; color: #155724; }
+
+        .mechanic-layout { padding: 25px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; height:100%; box-sizing:border-box;}
+        .mech-table { width: 100%; border-collapse: collapse; background: #161c24; border-radius: 12px; overflow: hidden; }
+        .mech-th { background: #1e293b; color: #666; font-size: 20px; padding: 15px; text-align: left; }
+        .mech-tr { border-bottom: 2px solid #111; font-size: 24px; font-weight: bold; }
+        .mech-td { padding: 20px 15px; vertical-align: middle; }
+        .row-working { background: #112233; border-left: 10px solid #007bff; }
+        .row-waiting { background: #161c24; border-left: 10px solid #64748b; }
+        .row-delayed { background: #2a1415; border-left: 10px solid #ff4d4d; animation: pulse-red 2s infinite alternate; }
+        .edit-dropdown-panel { background: #1e293b; padding: 20px; border-radius: 8px; margin-top: 15px; border: 1px solid #475569; display: none; gap: 15px; }
+        .edit-subgroup { display: flex; flex-direction: column; gap: 5px; }
+        .edit-subgroup label { font-size: 12px; color: #94a3b8; text-transform: uppercase; }
+        @keyframes pulse-red { 0% { background: #2a1415; } 100% { background: #3d1a1c; } }
+
+        .warehouse-layout { padding: 25px; max-width: 1000px; margin: 0 auto; overflow-y: auto; height:100%; box-sizing:border-box;}
+        .warehouse-item { border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; background: #ffffff; color:#1e293b; }
+        .warehouse-item.disabled { opacity: 0.3; background: #f8fafc; border-style: dashed; pointer-events: none; }
+        .status-badge { padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 14px; text-transform: uppercase; }
+        .status-waiting { background: #fee2e2; color: #991b1b; }
+        .status-queue { background: #fef3c7; color: #92400e; }
+        .status-assembling { background: #dbeafe; color: #1e40af; }
+        .status-assembled { background: #dcfce7; color: #16a34a; }
+        
+        .monitor-layout { padding: 25px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
+        .monitor-title { display: flex; justify-content: space-between; border-bottom: 4px solid #ff4d4d; padding-bottom: 15px; margin-bottom: 20px; font-size: 32px; font-weight: bold; }
+        .monitor-exit-btn { font-size: 14px; background: #161c24; border: 1px solid #333; padding: 8px 16px; border-radius: 6px; color: #64748b; cursor: pointer; transition: 0.2s; }
+        .monitor-exit-btn:hover { color: #ff4d4d; border-color: #ff4d4d; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. ВІДЕО-ЗАСТАВКА -->
+    <div id="splashScreen">
+        <video id="splashVideo" autoplay muted playsinline>
+            <source src="/cupra_intro.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <!-- 2. ЕКРАН ЛОГІНУ -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <div style="text-align: center; margin-bottom: 15px; font-size: 20px; font-weight: 800; letter-spacing: 1px;">SEAT & CUPRA <span style="color:#ff4d4d;">ЦЕНТР КИЇВ</span></div>
+            <h2>АВТОРИЗАЦІЯ ПЕРСОНАЛУ</h2>
+            <form id="loginForm" onsubmit="event.preventDefault(); doLogin();">
+                <div class="form-group">
+                    <label>Оберіть роль</label>
+                    <select id="userRole" onchange="toggleRoleFields()">
+                        <option value="Сервіс">Сервіс (Рецепція)</option>
+                        <option value="Mechanic">Механік / Майстер цеху</option>
+                        <option value="Склад">Склад запчастин</option>
+                        <option value="Mon_Client">Інформаційне табло клієнта 📺</option>
+                        <option value="Admin">Адміністратор системи ⚙️</option>
+                    </select>
+                </div>
+                <div id="staffFields" class="form-group">
+                    <label>Прізвище *</label><input type="text" id="userLastName" placeholder="Введіть прізвище" autocomplete="off" oninput="handleLastNameInput()"><div id="autocompleteBox" class="autocomplete-suggestions"></div>
+                </div>
+                <div id="staffFields2" class="form-group"><label>Ім'я *</label><input type="text" id="userFirstName" placeholder="Введіть ім'я" autocomplete="off"></div>
+                <div id="adminFields" class="form-group" style="display:none;"><label>Пароль Адміністратора *</label><input type="password" id="adminPassword" placeholder="•••••"></div>
+                <button type="submit" class="btn-universal btn-login">Увійти в систему 🔑</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. РОБОЧИЙ ІНТЕРФЕЙС -->
+    <div id="appInterface">
+        <!-- НАПИС ДЛЯ КОЖНОЇ РОБОЧОЇ ВКЛАДКИ -->
+        <div class="user-status-bar">
+            <div class="brand-badge-header">SEAT & CUPRA <span>ЦЕНТР КИЇВ</span> &nbsp;|&nbsp; Роль: <span id="barRole" style="color:#ff4d4d;">-</span></div>
+            <div>Користувач: <span id="barUserName" class="user-info-name">-</span></div>
+            <button class="btn-universal btn-logout" onclick="doLogout()">◀ Назад (Вихід)</button>
+        </div>
+
+        <!-- ВКЛАДКА: АДМІН -->
+        <div id="tab-Admin" class="tab-content">
+            <div class="admin-layout">
+                <div class="admin-left">
+                    <div class="admin-nav">
+                        <button class="admin-tab-btn active" id="btnSubTabQueue" onclick="switchAdminSubTab('queue')">📋 Управління чергою</button>
+                        <button class="admin-tab-btn" id="btnSubTabCodes" onclick="switchAdminSubTab('codes')">🔑 Коди нарядів</button>
+                        <button class="admin-tab-btn" id="btnSubTabBrands" onclick="switchAdminSubTab('brands')">🚗 Марки автомобілів</button>
+                    </div>
+
+                    <div id="subtab-queue">
+                        <h3 style="color:#ff4d4d; margin-top:0;">РЕДАГУВАННЯ ВСІЄЇ ЧЕРГИ СТО</h3>
+                        <table class="admin-table">
+                            <thead><tr><th>Час / Марка</th><th>Держномер</th><th>Заявка</th><th>Загальний статус</th><th>Склад</th><th>Зона</th><th>Майстер</th><th>Дія</th></tr></thead>
+                            <tbody id="adminTableRows"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="subtab-codes" style="display:none;">
+                        <h3 style="color:#ffcc00; margin-top:0;">КОНФІГУРАТОР КОДІВ ЗАКАЗ-НАРАДІВ</h3>
+                        <div style="background:#161c24; padding:20px; border-radius:8px; margin-bottom:20px; display:flex; gap:15px; align-items:flex-end; border:1px solid #333;">
+                            <div class="form-group" style="margin:0; width:30%;"><label style="font-size:12px; color:#aaa;">Код наряду (4 знаки) *</label><input type="text" id="newCodeName" maxlength="4" placeholder="Напр. TOZ1" style="padding:8px; font-size:14px; text-transform:uppercase;"></div>
+                            <div class="form-group" style="margin:0; width:45%;"><label style="font-size:12px; color:#aaa;">Опис / Напрямок СТО *</label><select id="newCodeDesc" style="padding:8px; font-size:14px;"><option value="Сервіс">Сервіс</option><option value="Кузовний ремонт">Кузовний ремонт</option><option value="Мийка">Мийка</option></select></div>
+                            <button class="btn-universal" style="background:#22c55e; padding:10px 15px;" onclick="adminAddCode()">Додати код +</button>
+                        </div>
+                        <table class="admin-table">
+                            <thead><tr><th style="width:30%;">Код (Ім'я префікса)</th><th style="width:50%;">Зона автоматичного призначення</th><th style="width:20%;">Дія</th></tr></thead>
+                            <tbody id="adminCodesTableRows"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="subtab-brands" style="display:none;">
+                        <h3 style="color:#2cfc7d; margin-top:0;">ДОВІДНИК МАРКОВАНИХ БРЕНДІВ СТО</h3>
+                        <div style="background:#161c24; padding:20px; border-radius:8px; margin-bottom:20px; display:flex; gap:15px; align-items:flex-end; border:1px solid #333;">
+                            <div class="form-group" style="margin:0; width:70%;"><label style="font-size:12px; color:#aaa;">Назва марки автомобіля *</label><input type="text" id="newBrandName" placeholder="Наприклад: Cupra & Seat" style="padding:8px; font-size:14px;"></div>
+                            <button class="btn-universal" style="background:#22c55e; padding:10px 15px; width:30%;" onclick="adminAddBrand()">Додати марку +</button>
+                        </div>
+                        <table class="admin-table">
+                            <thead><tr><th style="width:10%;">№</th><th style="width:70%;">Назва бренду</th><th style="width:20%;">Дія</th></tr></thead>
+                            <tbody id="adminBrandsTableRows"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-right">
+                    <h2 style="margin-top:0; color:#2cfc7d;">👨‍🔧 ШТАТ МЕХАНІКІВ</h2>
+                    <div class="form-group">
+                        <input type="text" id="newMechLastName" placeholder="Прізвище" style="padding:8px; font-size:14px; margin-bottom:5px;">
+                        <input type="text" id="newMechFirstName" placeholder="Ім'я" style="padding:8px; font-size:14px; margin-bottom:5px;">
+                        <button class="btn-universal" style="background:#22c55e; padding:8px; font-size:14px;" onclick="adminAddMech()">Додати механіка +</button>
+                    </div>
+                    <hr style="border-color:#333; margin:20px 0;">
+                    <div id="adminMechanicsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА: СЕРВІС -->
+        <div id="tab-Сервіс" class="tab-content">
+            <div class="service-layout">
+                <div class="srv-left">
+                    <h2>Реєстрація автомобіля на Сервіс</h2>
+                    <form id="regForm" onsubmit="event.preventDefault();">
+                        <div class="form-group"><label>Тип реєстрації</label><select id="regType" onchange="toggleTimeMode()"><option value="now">На зараз</option><option value="schedule">Запланувати час</option></select></div>
+                        <div class="form-group" id="timeGroup" style="display:none;"><label>Час запису *</label><select id="appointmentTime"></select></div>
+                        <div class="form-group"><label>Державний номер *</label><input type="text" id="plateNumber" required placeholder="AA1111BB"></div>
+                        <div class="form-group"><label>Номер заявки *</label><input type="text" id="ticketNumber" required placeholder="Введіть номер"></div>
+                        <div class="form-group"><label>Марка авто</label><select id="brandSelectInput"></select></div>
+                        <div style="display:flex; gap:10px;"><button type="button" id="btnNowAction" class="btn-universal" style="background:#dc3545; width:100%;" onclick="submitRegistration(true)">В роботу 🚀</button><button type="button" id="btnBookAction" class="btn-universal" style="background:#002e3b; width:100%; display:none;" onclick="submitRegistration(false)">Записати 📅</button></div>
+                    </form>
+                </div>
+                <div class="srv-right"><h2>Журнал заїздів (Сервіс)</h2><table class="srv-table"><thead><tr><th>Час / Авто</th><th>Заявка</th><th>Статус</th></tr></thead><tbody id="srvJournalTable"></tbody></table></div>
+            </div>
+        </div>
+        
+        <!-- ВКЛАДКА: МЕХАНІК -->
+        <div id="tab-Mechanic" class="tab-content">
+            <div class="mechanic-layout">
+                <div class="stats-container" id="mechStatsBox"></div>
+                <table class="mech-table">
+                    <thead><tr><th class="mech-th" style="width:12%;">Час</th><th class="mech-th" style="width:33%;">Автомобіль</th><th class="mech-th" style="width:25%;">Місце / Механік</th><th class="mech-th" style="width:30%;">Керування</th></tr></thead>
+                    <tbody id="mechRowsContainer"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА: СКЛАД -->
+        <div id="tab-Склад" class="tab-content" style="background:#f4f6f9;"><div class="warehouse-layout"><h2 style="color:#002e3b; border-bottom:3px solid #002e3b; padding-bottom:10px; margin-top:0;">📦 Склад запчастин</h2><div id="warehouseContainer"></div></div></div>
+        
+        <!-- ВКЛАДКА: ІНФОМОНІТОР -->
+        <div id="tab-Mon_Client" class="tab-content" style="background:#0b0e14; padding:0; height: 100vh;">
+            <div class="monitor-layout">
+                <div class="monitor-title">
+                    <div>SEAT & CUPRA <span style="color:#ff4d4d;">ЦЕНТР КИЇВ</span> | ІНФОРМАЦІЙНЕ ТАБЛО</div>
+                    <!-- КНОПКА НАЗАД ДЛЯ ЕКРАНА КЛІЄНТА -->
+                    <button class="monitor-exit-btn" onclick="doLogout()">◀ Назад в меню</button>
+                </div>
+                <div class="stats-container" id="monitorStatsBox"></div>
+                <table class="mech-table">
+                    <thead><tr><th class="mech-th" style="width:12%;">Час запису</th><th class="mech-th" style="width:35%;">Автомобіль</th><th class="mech-th" style="width:28%;">Місце / Майстер</th><th class="mech-th" style="width:25%;">Поточний статус</th></tr></thead>
+                    <tbody id="monitorRowsContainer"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <audio id="cnapSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-84.wav" preload="auto"></audio>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let localQueue = [];
+        let serverMechanics = [];
+        let localRepairCodes = [];
+        let localCarBrands = [];
+        let localUsersDB = JSON.parse(localStorage.getItem('sto_users_db')) || [];
+        let previousStateString = "";
+
+        const video = document.getElementById('splashVideo');
+        const splash = document.getElementById('splashScreen');
+        if (video) {
+            video.onended = function() { triggerAppLaunch(); };
+            setTimeout(() => { if (splash.style.display !== 'none') triggerAppLaunch(); }, 9500);
+        }
+        function triggerAppLaunch() { splash.style.opacity = 0; setTimeout(() => { splash.style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; }, 800); }
+
+        function switchAdminSubTab(target) {
+            document.getElementById('subtab-queue').style.display = target === 'queue' ? 'block' : 'none';
+            document.getElementById('subtab-codes').style.display = target === 'codes' ? 'block' : 'none';
+            document.getElementById('subtab-brands').style.display = target === 'brands' ? 'block' : 'none';
+            document.getElementById('btnSubTabQueue').className = target === 'queue' ? 'admin-tab-btn active' : 'admin-tab-btn';
+            document.getElementById('btnSubTabCodes').className = target === 'codes' ? 'admin-tab-btn active' : 'admin-tab-btn';
+            document.getElementById('btnSubTabBrands').className = target === 'brands' ? 'admin-tab-btn active' : 'admin-tab-btn';
+        }
+
+        function handleLastNameInput() {
+            const val = document.getElementById('userLastName').value.trim().toLowerCase();
+            const box = document.getElementById('autocompleteBox'); box.innerHTML = '';
+            if (val.length < 1) { box.style.display = 'none'; return; }
+            const matches = localUsersDB.filter(u => u.lastName.toLowerCase().startsWith(val));
+            if (matches.length === 0) { box.style.display = 'none'; return; }
+            box.style.display = 'block';
+            matches.forEach(m => {
+                const item = document.createElement('div'); item.className = 'suggestion-item'; item.innerText = `${m.lastName} ${m.firstName}`;
+                item.onclick = () => { document.getElementById('userLastName').value = m.lastName; document.getElementById('userFirstName').value = m.firstName; box.style.display = 'none'; };
+                box.appendChild(item);
+            });
+        }
+
+        function toggleRoleFields() {
+            const role = document.getElementById('userRole').value;
+            document.getElementById('staffFields').style.display = (role === 'Mon_Client' || role === 'Admin') ? 'none' : 'flex';
+            document.getElementById('staffFields2').style.display = (role === 'Mon_Client' || role === 'Admin') ? 'none' : 'flex';
+            document.getElementById('adminFields').style.display = role === 'Admin' ? 'block' : 'none';
+        }
+
+        function doLogin() {
+            const role = document.getElementById('userRole').value;
+            let lastName = "", firstName = "", password = "";
+            if (role === 'Admin') { lastName = "Admin"; password = document.getElementById('adminPassword').value; }
+            else if (role === 'Mon_Client') { lastName = "Телевізор"; firstName = "Шоурум"; }
+            else {
+                lastName = document.getElementById('userLastName').value.trim(); firstName = document.getElementById('userFirstName').value.trim();
+                if (!lastName || !firstName) return;
+                if (!localUsersDB.some(u => u.lastName.toLowerCase() === lastName.toLowerCase() && u.firstName.toLowerCase() === firstName.toLowerCase())) {
+                    localUsersDB.push({ lastName, firstName }); localStorage.setItem('sto_users_db', JSON.stringify(localUsersDB));
+                }
+            }
+            socket.emit('registerUser', { lastName, firstName, role, password });
+        }
+
+        socket.on('loginSuccess', (user) => {
+            document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appInterface').style.display = 'flex';
+            document.getElementById('barRole').innerText = user.role === 'Mon_Client' ? 'Інфомонітор' : user.role; document.getElementById('barUserName').innerText = `${user.lastName} ${user.firstName}`;
+            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+            document.getElementById(`tab-${user.role}`).style.display = 'block';
+            document.querySelector('.user-status-bar').style.display = user.role === 'Mon_Client' ? 'none' : 'flex';
+            renderAll();
+        });
+        socket.on('loginError', (msg) => alert(msg));
+        function doLogout() { if(confirm("Повернутися до вибору ролей?")) { socket.emit('logoutUser'); } }
+        socket.on('logoutSuccess', () => { document.getElementById('appInterface').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('loginForm').reset(); document.getElementById('adminPassword').value = ''; toggleRoleFields(); });
+
+        socket.on('updateMechanics', (list) => { serverMechanics = list; renderAll(); });
+        socket.on('updateRepairCodes', (list) => { localRepairCodes = list; renderAll(); });
+        socket.on('updateQueue', (queue) => { localQueue = queue; renderAll(); });
+        socket.on('updateCarBrands', (brandsList) => { localCarBrands = brandsList; updateServiceBrandSelect(); renderAll(); });
+
+        function updateServiceBrandSelect() {
+            const select = document.getElementById('brandSelectInput'); if(!select) return; select.innerHTML = '';
+            localCarBrands.forEach(brand => { select.add(new Option(brand, brand)); });
+        }
+
+        const timeSelectSrv = document.getElementById('appointmentTime'); let sHour = 9, sMin = 0;
+        while (sHour < 17 || (sHour === 17 && sMin <= 30)) {
+            let timeStr = `${sHour.toString().padStart(2, '0')}:${sMin.toString().padStart(2, '0')}`;
+            timeSelectSrv.add(new Option(timeStr, timeStr)); sMin += 30; if (sMin >= 60) { sMin = 0; sHour++; }
+        }
+
+        setInterval(renderAll, 60000);
+        function renderAll() { renderServiceTab(); renderMechanicTab(); renderWarehouseTab(); renderMonitorTab(); renderAdminTab(); }
+
+        function renderAdminTab() {
+            const tbody = document.getElementById('adminTableRows'); if(!tbody) return; tbody.innerHTML = '';
+            localQueue.forEach(item => {
+                let mechOptions = `<option value="Не призначено">Не призначено</option>`;
+                serverMechanics.forEach(m => { let fn = `${m.lastName} ${m.firstName}`; mechOptions += `<option value="${fn}" ${item.mechanicName === fn ? 'selected' : ''}>${m.lastName} ${m.firstName[0]}.</option>`; });
+                let brandOptions = ''; localCarBrands.forEach(b => { brandOptions += `<option value="${b}" ${item.brand === b ? 'selected' : ''}>${b}</option>`; });
+                tbody.innerHTML += `<tr><td><input type="text" class="admin-input-inline" id="adm-time-${item.id}" value="${item.time}"><br><select class="admin-select-inline" id="adm-brand-${item.id}" style="margin-top:3px;">${brandOptions}</select></td><td><input type="text" class="admin-input-inline" id="adm-plate-${item.id}" value="${item.plateNumber}"></td><td><input type="text" class="admin-input-inline" id="adm-ticket-${item.id}" value="${item.ticketNumber}"></td><td><select class="admin-select-inline" id="adm-status-${item.id}"><option value="in_queue" ${item.status==='in_queue'?'selected':''}>В черзі</option><option value="called" ${item.status==='called'?'selected':''}>В роботі</option><option value="completed" ${item.status==='completed'?'selected':''}>Завершено</option></select></td><td><select class="admin-select-inline" id="adm-parts-${item.id}"><option value="waiting_parts" ${item.partsStatus==='waiting_parts'?'selected':''}>Очікує</option><option value="assembling" ${item.partsStatus==='assembling'?'selected':''}>Збирається</option><option value="assembled" ${item.partsStatus==='assembled'?'selected':''}>Зібрано</option></select></td><td><select class="admin-select-inline" id="adm-type-${item.id}"><option value="Сервіс" ${item.repairType==='Сервіс'?'selected':''}>Сервіс</option><option value="Кузовний ремонт" ${item.repairType==='Кузовний ремонт'?'selected':''}>Кузовний</option><option value="Мийка" ${item.repairType==='Мийка'?'selected':''}>Мийка</option></select></td><td><select class="admin-select-inline" id="adm-mech-${item.id}">${mechOptions}</select></td><td><button class="btn-universal" style="background:#0284c7; padding:5px 8px; font-size:12px;" onclick="adminSaveVehicle(${item.id})">💾</button></td></tr>`;
+            });
+            const brandsTbody = document.getElementById('adminBrandsTableRows'); if (brandsTbody) { brandsTbody.innerHTML = ''; localCarBrands.forEach((b, index) => { brandsTbody.innerHTML += `<tr><td><b>${index + 1}</b></td><td style="font-size:15px; font-weight:bold; color:#2cfc7d;">${b}</td><td><button class="btn-universal btn-danger" onclick="adminDeleteBrand(${index})">Видалити ✕</button></td></tr>`; }); }
+            const codesTbody = document.getElementById('adminCodesTableRows'); if(codesTbody) { codesTbody.innerHTML = ''; localRepairCodes.forEach((c, index) => { codesTbody.innerHTML += `<tr><td style="font-size:16px; font-weight:bold; color:#ffcc00;">${c.name}</td><td style="font-size:14px; font-weight:bold;">${c.description}</td><td><button class="btn-universal btn-danger" onclick="adminDeleteCode(${index})">✕</button></td></tr>`; }); }
+            const mechListContainer = document.getElementById('adminMechanicsList'); if(mechListContainer) { mechListContainer.innerHTML = ''; serverMechanics.forEach((m, idx) => { mechListContainer.innerHTML += `<div class="staff-item"><span>🔧 ${m.lastName} ${m.firstName}</span><button class="btn-universal btn-danger" onclick="adminDeleteMech(${idx})">✕</button></div>`; }); }
+        }
+        function adminSaveVehicle(id) { socket.emit('adminUpdateVehicleFull', { id, time: document.getElementById(`adm-time-${id}`).value, brand: document.getElementById(`adm-brand-${id}`).value, plateNumber: document.getElementById(`adm-plate-${id}`).value, ticketNumber: document.getElementById(`adm-ticket-${id}`).value, status: document.getElementById(`adm-status-${id}`).value, partsStatus: document.getElementById(`adm-parts-${id}`).value, repairType: document.getElementById(`adm-type-${id}`).value, post: "Пост 1", mechanicName: document.getElementById(`adm-mech-${id}`).value }); alert("Збережено!"); }
+        function adminAddMech() { const ln = document.getElementById('newMechLastName').value.trim(); const fn = document.getElementById('newMechFirstName').value.trim(); if(!ln || !fn) return; socket.emit('adminAddMechanic', { lastName: ln, firstName: fn }); document.getElementById('newMechLastName').value = ''; document.getElementById('newMechFirstName').value = ''; }
+        function adminDeleteMech(idx) { if(confirm("Видалити?")) socket.emit('adminDeleteMechanic', idx); }
+        function adminAddCode() { const name = document.getElementById('newCodeName').value.trim().toUpperCase(); const description = document.getElementById('newCodeDesc').value; if (name.length !== 4) { alert("4 знаки!"); return; } socket.emit('adminAddRepairCode', { name, description }); document.getElementById('newCodeName').value = ''; }
+        function adminDeleteCode(index) { if(confirm("Видалити?")) socket.emit('adminDeleteRepairCode', index); }
+        function adminAddBrand() { const name = document.getElementById('newBrandName').value.trim(); if(!name) return; socket.emit('adminAddBrand', name); document.getElementById('newBrandName').value = ''; }
+        function adminDeleteBrand(index) { if(confirm("Видалити марку?")) { socket.emit('adminDeleteBrand', index); } }
+
+        function toggleTimeMode() { const mode = document.getElementById('regType').value; document.getElementById('timeGroup').style.display = mode === 'schedule' ? 'block' : 'none'; document.getElementById('btnNowAction').style.display = mode === 'now' ? 'block' : 'none'; document.getElementById('btnBookAction').style.display = mode === 'schedule' ? 'block' : 'none'; }
+        function submitRegistration(isUrgent) { const plate = document.getElementById('plateNumber').value.trim(); const ticket = document.getElementById('ticketNumber').value.trim(); if(!plate || !ticket) { alert("Поля!"); return; } socket.emit('addVehicle', { isUrgent, appointmentTime: isUrgent ? "" : document.getElementById('appointmentTime').value, plateNumber: plate, ticketNumber: ticket, brand: document.getElementById('brandSelectInput').value }); document.getElementById('plateNumber').value = ""; document.getElementById('ticketNumber').value = ""; }
+        function renderServiceTab() { const tbody = document.getElementById('srvJournalTable'); if(!tbody) return; tbody.innerHTML = ''; localQueue.forEach(item => { let badge = item.status === 'completed' ? '<span class="badge-status badge-completed">Завершено</span>' : item.status === 'called' ? '<span class="badge-status badge-working">В роботі</span>' : '<span class="badge-status badge-waiting">Записано</span>'; tbody.innerHTML += `<tr><td><span style="background:#334155; color:white; padding:2px 6px; border-radius:4px; font-weight:bold;">${item.time}</span><br><b>${item.plateNumber}</b> (${item.brand})</td><td>${item.ticketNumber}</td><td>${badge}</td></tr>`; }); }
+        
+        function renderMechanicTab() {
+            renderLiveStats('mechStatsBox');
+            const container = document.getElementById('mechRowsContainer'); if(!container) return; container.innerHTML = ''; let now = new Date(); let currentMinutes = now.getHours() * 60 + now.getMinutes(); localQueue.forEach(item => { if (item.status === 'completed') return; let [cHour, cMin] = item.time.split(':').map(Number); let diff = (cHour * 60 + cMin) - currentMinutes; let rowClass = 'row-waiting', statusTextHtml = ''; if (item.status === 'called') { rowClass = 'row-working'; statusTextHtml = `<span style="color:#007bff">В РОБОТІ 🔧</span><br><span style="font-size:13px; color:#aaa;">${item.partsStatus=='assembled'?'Деталі готові ✅':'Підбір деталей'}</span>`; } else if (diff > 0) { statusTextHtml = `<span style="color:#ffcc00">До заїзду: ${diff} хв</span>`; } else { rowClass = 'row-delayed'; statusTextHtml = `<span style="color:#ff4d4d">ЗАПІЗНЮЄТЬСЯ: ${Math.abs(diff)} хв ⏱</span>`; } let displayPlace = item.repairType === 'Сервіс' ? (item.post !== 'Не призначено' ? `${item.post} (${item.mechanicName || 'Не вибрано'})` : 'Не розподілено') : (item.repairType === 'Мийка' ? 'Бокс мийки' : 'Кузовний цех'); let mechOptions = `<option value="Не призначено">-- Оберіть механіка --</option>`; serverMechanics.forEach(m => { mechOptions += `<option value="${m.lastName} ${m.firstName}" ${item.mechanicName === m.lastName + ' ' + m.firstName ? 'selected' : ''}>${m.lastName} ${m.firstName[0]}.</option>`; }); container.innerHTML += `<tr class="mech-tr ${rowClass}"><td class="mech-td">${item.time}</td><td class="mech-td">${item.plateNumber} <span style="font-size:14px; color:#888;">(${item.brand})</span><br><small style="font-size:13px; color:#555;">Заявка: ${item.ticketNumber}</small></td><td class="mech-td" style="font-size:18px;">${displayPlace}</td><td class="mech-td">${statusTextHtml} <button class="btn-universal" style="background:#475569; padding:6px 12px; font-size:13px; display:block; margin-top:8px; width:100%;" onclick="toggleMechEdit(${item.id})">Редагувати ⚙️</button><div class="edit-dropdown-panel" id="mech-panel-${item.id}"><div class="edit-subgroup"><label>Зона</label><select id="m-type-${item.id}" onchange="toggleMechPostSelect(${item.id})" style="padding:6px; font-size:14px;"><option value="Сервіс" ${item.repairType==='Сервіс'?'selected':''}>Сервіс</option><option value="Кузовний ремонт" ${item.repairType==='Кузовний ремонт'?'selected':''}>Кузовний</option><option value="Мийка" ${item.repairType==='Мийка'?'selected':''}>Мийка</option></select></div><div class="edit-subgroup"><label>Пост</label><select id="m-post-${item.id}" ${item.repairType!=='Сервіс'?'disabled':''} style="padding:6px; font-size:14px;"><option value="Пост 1" ${item.post==='Пост 1'?'selected':''}>Пост 1</option><option value="Пост 2" ${item.post==='Пост 2'?'selected':''}>Пост 2</option><option value="Пост 3" ${item.post==='Пост 3'?'selected':''}>Пост 3</option></select></div><div class="edit-subgroup"><label>Механік</label><select id="m-mechanic-${item.id}" ${item.repairType!=='Сервіс'?'disabled':''} style="padding:6px; font-size:14px;">${mechOptions}</select></div><button class="btn-universal" style="background:#0284c7; padding:10px;" onclick="saveMechAssignment(${item.id})">💾</button>${item.status=='called'?`<button class="btn-universal" style="background:#22c55e; padding:10px;" onclick="completeMechCar(${item.id})">✅</button>`:''}</div></td></tr>`; }); }
+        function toggleMechEdit(id) { const p = document.getElementById(`mech-panel-${id}`); p.style.display = p.style.display === 'flex' ? 'none' : 'flex'; }
+        function toggleMechPostSelect(id) { let isSrv = document.getElementById(`m-type-${id}`).value === 'Сервіс'; document.getElementById(`m-post-${id}`).disabled = !isSrv; document.getElementById(`m-mechanic-${id}`).disabled = !isSrv; }
+        function saveMechAssignment(id) { socket.emit('updateVehicle', { id, repairType: document.getElementById(`m-type-${id}`).value, post: document.getElementById(`m-post-${id}`).value, mechanicName: document.getElementById(`m-mechanic-${id}`).value }); }
+        function completeMechCar(id) { socket.emit('completeAssembling', id); }
+        
+        function renderWarehouseTab() { const container = document.getElementById('warehouseContainer'); if(!container) return; container.innerHTML = ''; if (localQueue.length === 0) { container.innerHTML = '<p style="color:#666; text-align:center;">Заявок немає</p>'; return; } localQueue.forEach(item => { const isMechanicWorking = item.status === 'called'; let statusClass = 'status-waiting', statusText = 'Очікує цех', buttonHtml = ''; if (isMechanicWorking) { if (item.partsStatus === 'waiting_parts') { statusText = 'Черга підбору'; buttonHtml = `<button class="btn-universal" style="background:#007bff;" onclick="socket.emit('startAssembling',${item.id})">Взяти в роботу</button>`; } else if (item.partsStatus === 'assembling') { statusClass = 'status-assembling'; statusText = 'Збирається'; buttonHtml = `<button class="btn-universal" style="background:#28a745;" onclick="socket.emit('completeAssembling',${item.id})">Зібрано</button>`; } else if (item.partsStatus === 'assembled') { statusClass = 'status-assembled'; statusText = 'Завершено'; buttonHtml = `<div style="color:#dc3545; font-size:12px; font-weight:bold;">⏱ Видано</div>`; } } container.innerHTML += `<div class="warehouse-item ${!isMechanicWorking ? 'disabled' : ''}"><div><strong>${item.plateNumber}</strong> (${item.brand})<br><small style="color:#64748b;">Накладна: ${item.ticketNumber} | Призначення: ${item.repairType==='Сервіс'?item.post+' ('+(item.mechanicName)+')':item.repairType}</small></div><div style="text-align:right; display:flex; flex-direction:column; gap:8px; align-items:flex-end;"><span class="status-badge ${statusClass}">${statusText}</span>${buttonHtml}</div></div>`; }); }
+        
+        function renderLiveStats(containerId) {
+            const box = document.getElementById(containerId); if(!box) return;
+            let inRepair = localQueue.filter(i => i.status === 'called').length;
+            let waiting = localQueue.filter(i => i.status === 'in_queue').length;
+            box.innerHTML = `<div class="stat-card stat-blue">🔧 В ЦЕХУ (В РОБОТІ): <span style="color:#007bff; font-size:20px;">${inRepair} авто</span></div><div class="stat-card stat-yellow">⏳ ОЧІКУЮТЬ ЗАЇЗДУ / ЧЕРГА: <span style="color:#ffcc00; font-size:20px;">${waiting} авто</span></div>`;
+        }
+
+        function renderMonitorTab() {
+            renderLiveStats('monitorStatsBox');
+            const container = document.getElementById('monitorRowsContainer'); if(!container) return; container.innerHTML = ''; let currentStateString = localQueue.map(i => `${i.id}-${i.repairType}-${i.post}-${i.partsStatus}-${i.mechanicName}`).join('|'); if (previousStateString !== "" && previousStateString !== currentStateString) { document.getElementById('cnapSound').play().catch(()=>{}); } previousStateString = currentStateString; let activePlaces = {}; localQueue.forEach(item => { let place = item.repairType === 'Сервіс' ? item.post : item.repairType; if (place !== 'Не вказано' && place !== 'Не призначено') { if (!activePlaces[place]) activePlaces[place] = []; activePlaces[place].push(item); } }); for (let place in activePlaces) { let cars = activePlaces[place]; let currentCar = cars.find(c => c.status === 'called'); let upcomingCars = cars.filter(c => c.status === 'in_queue'); let now = new Date(); let currentMinutes = now.getHours() * 60 + now.getMinutes(); if (currentCar) { container.innerHTML += `<tr class="mech-tr row-working"><td class="mech-td">${currentCar.time}</td><td class="mech-td">${currentCar.plateNumber} <span style="font-size:16px; color:#888;">(${currentCar.brand})</span></td><td class="mech-td" style="font-size:20px;">${currentCar.repairType==='Сервіс'?place+' — Майстер '+currentCar.mechanicName:place}</td><td class="mech-td" style="color:#007bff;">В РОБОТІ 🔧<span style="font-size:14px; color:#fff;">${currentCar.partsStatus==='assembled'?' (Деталі готові ✅)':''}</span></td></tr>`; } if (upcomingCars.length > 0) { upcomingCars.forEach(car => { let [cHour, cMin] = car.time.split(':').map(Number); let diff = (cHour * 60 + cMin) - currentMinutes; let rowClass = 'row-waiting', statusHtml = ''; if (diff > 0) statusHtml = `<span style="color:#ffcc00">До заїзду: ${diff} хв</span>`; else { rowClass = 'row-delayed'; statusHtml = `<span style="color:#ff4d4d">ЗАПІЗНЮЄТЬСЯ: ${Math.abs(diff)} хв ⏱</span>`; } container.innerHTML += `<tr class="mech-tr ${rowClass}"><td class="mech-td">${car.time}</td><td class="mech-td">${car.plateNumber} <span style="font-size:16px; color:#888;">(${car.brand})</span></td><td class="mech-td" style="font-size:20px;">${place}</td><td class="mech-td">${statusHtml}</td></tr>`; }); } } }
+    </script>
+</body>
+</html>
