@@ -8,21 +8,24 @@
         select, input { background: #1e293b; color: white; border: 1px solid #475569; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; box-sizing: border-box; }
         .btn-universal { border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; color: white; transition: 0.2s; }
         
-        /* ЗОБРАЖЕННЯ ТА ШКАЛА ПРИ ЗАВАНТАЖЕННІ (SPLASH SCREEN) */
-        #splashScreen { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100vw; 
-            height: 100vh; 
-            background: #000000 url('1783799425622.jpeg') center/cover no-repeat; 
-            display: flex; 
-            flex-direction: column;
-            justify-content: center; 
-            align-items: center; 
-            z-index: 9999; 
-            transition: opacity 0.8s ease-out; 
-        }
+        /* ЗОБРАЖЕННЯ ТА ШКАЛА ПРИ ЗАВАНТАЖЕННІ (SPLASH SCREEN) 
+        } 
+        
+#splashScreen { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    /* Ось тут ми підключаємо вашу нову картинку */
+    background: #000000 url('bg-loading.jpg') center/cover no-repeat; 
+    display: flex; 
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center; 
+    z-index: 9999; 
+    transition: opacity 0.8s ease-out; 
+}
 
         /* Оверлей для покращення читабельності */
         #splashScreen::before {
