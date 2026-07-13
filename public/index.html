@@ -210,9 +210,37 @@
 
     <div id="loginScreen">
         <div class="login-box">
-            <div style="text-align: center; margin-bottom: 15px; font-size: 26px; font-weight: 900; letter-spacing: 2px;">СЕРВІС</div>
-            <h2>АВТОРИЗАЦІЯ ПЕРСОНАЛУ</h2>
-            <form id="loginForm" onsubmit="event.preventDefault(); doLogin();">
+            <!-- НОВЕ МЕНЮ В СТИЛІ CUPRA -->
+<div id="mainMenu" class="menu-container">
+    <h2 style="text-align:center; color: white;">CUPRA SERVICE SYSTEM</h2>
+    
+    <div class="menu-card" onclick="doLoginByRole('Сервіс')">
+        <div class="card-icon">🔧</div>
+        <div class="card-text">
+            <h3>СЕРВІС</h3>
+            <p>Автомобілі в роботі</p>
+        </div>
+        <div class="card-stats" id="stat-service">0 авто</div>
+    </div>
+
+    <div class="menu-card" onclick="doLoginByRole('Mechanic')">
+        <div class="card-icon">👨‍🔧</div>
+        <div class="card-text">
+            <h3>МЕХАНІК</h3>
+            <p>Мої завдання</p>
+        </div>
+        <div class="card-stats" id="stat-mechanic">0 робіт</div>
+    </div>
+
+    <div class="menu-card" onclick="doLoginByRole('Mon_Client')">
+        <div class="card-icon">📺</div>
+        <div class="card-text">
+            <h3>ІНФО МОНІТОР</h3>
+            <p>Показ повідомлень клієнтам</p>
+        </div>
+    </div>
+</div>
+ onsubmit="event.preventDefault(); doLogin();">
                 <div class="form-group">
                     <label>Оберіть роль</label>
                     <select id="userRole" onchange="toggleRoleFields()">
@@ -541,6 +569,15 @@
             rowClass = 'row-completed';
             statusHtml = `<div class="timer-text">ВАШЕ АВТО ПОВЕРНУТЬ ЧЕРЕЗ ${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2, '0')}</div>`;
         } 
+     function doLoginByRole(role) {
+    const userData = {
+        lastName: "Користувач",
+        firstName: "Системи",
+        role: role,
+        password: ""
+    };
+    socket.emit('registerUser', userData);
+     }
         else if (item.status === 'called') {
             rowClass = 'row-working';
             // Виводимо місце, навіть якщо механік ще не "прив'язаний" в адмінці
