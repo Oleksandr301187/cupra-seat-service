@@ -167,10 +167,55 @@
         .monitor-layout { padding: 25px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
         .monitor-title { display: flex; justify-content: space-between; border-bottom: 4px solid #ff4d4d; padding-bottom: 15px; margin-bottom: 20px; font-size: 32px; font-weight: bold; }
         .monitor-exit-btn { font-size: 14px; background: #161c24; border: 1px solid #333; padding: 8px 16px; border-radius: 6px; color: #64748b; cursor: pointer; transition: 0.2s; }
-        .monitor-exit-btn:hover { color: #ff4d4d; border-color: #ff4d4d; }
-    </style>
+        .monitor-exit-btn:hover { color: #ff4d4d; border-color: #ff4d4d; } 
+        /* Стиль карток у стилі Cupra */
+.menu-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    padding: 20px 30px;
+    margin: 15px auto;
+    max-width: 500px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.menu-card:hover { background: rgba(255, 255, 255, 0.1); border-color: #ff4d4d; }
+.card-icon { font-size: 30px; margin-right: 20px; }
+.card-text h3 { margin: 0; color: #fff; font-size: 20px; }
+.card-text p { margin: 5px 0 0; color: #94a3b8; font-size: 14px; }
+ </style>
 </head>
 <body>
+
+       <div id="mainMenu" class="menu-container" style="display:none; padding-top: 50px;">
+        <h2 style="text-align:center; color: #ff4d4d;">CUPRA SERVICE SYSTEM</h2>
+        
+        <div class="menu-card" onclick="doLoginByRole('Сервіс')">
+            <div class="card-icon">🔧</div>
+            <div class="card-text">
+                <h3>СЕРВІС</h3>
+                <p>Автомобілі в роботі</p>
+            </div>
+        </div>
+
+        <div class="menu-card" onclick="doLoginByRole('Mechanic')">
+            <div class="card-icon">👨‍🔧</div>
+            <div class="card-text">
+                <h3>МАЙСТЕР ЦЕХУ</h3>
+                <p>Контроль робіт</p>
+            </div>
+        </div>
+
+        <div class="menu-card" onclick="doLoginByRole('Mon_Client')">
+            <div class="card-icon">📺</div>
+            <div class="card-text">
+                <h3>ІНФО МОНІТОР</h3>
+                <p>Показ повідомлень клієнтам</p>
+            </div>
+        </div>
+    </div>
 
     <div id="splashScreen">
         <div class="splash-content">
