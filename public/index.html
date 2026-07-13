@@ -489,26 +489,28 @@
             box.innerHTML = `<div class="stat-card stat-blue">🔧 В ЦЕХУ (В РОБОТІ): <span style="color:#007bff; font-size:20px;">${inRepair} авто</span></div><div class="stat-card stat-yellow">⏳ ОЧІКУЮТЬ ЗАЇЗДУ / ЧЕРГА: <span style="color:#ffcc00; font-size:20px;">${waiting} авто</span></div>`;
         }
 
-               function renderMonitorTab() {
-            renderLiveStats('monitorStatsBox');
-            const container = document.getElementById('monitorRowsContainer');
-            if(!container) return;
-            container.innerHTML = '';
-            
-            // Виводимо ВСІ авто з черги, навіть якщо вони ще не в роботі
-            localQueue.forEach(item => {
-                let rowClass = item.status === 'called' ? 'row-working' : 'row-waiting';
-                let statusText = item.status === 'called' ? 'В РОБОТІ 🔧' : 'Очікує в черзі ⏳';
-                
-                container.innerHTML += `
-                    <tr class="mech-tr ${rowClass}">
-                        <td class="mech-td">${item.time}</td>
-                        <td class="mech-td">${item.plateNumber} <span style="font-size:16px; color:#888;">(${item.brand})</span></td>
-                        <td class="mech-td" style="font-size:20px;">${item.repairType}</td>
-                        <td class="mech-td">${statusText}</td>
-                    </tr>`;
-            });
-        }
+               
+function renderMonitorTab() {
+    renderLiveStats('monitorStatsBox');
+    const container = document.getElementById('monitorRowsContainer');
+    if (!container) return;
+    
+    container.innerHTML = ''; // Очищаємо таблицю
+
+    // Виводимо абсолютно всі авто, які є в черзі, незалежно від статусу
+    localQueue.forEach(item => {
+        let rowClass = item.status === 'called' ? 'row-working' : 'row-waiting';
+        let statusText = item.status === 'called' ? 'В РОБОТІ 🔧' : 'Очікує в черзі ⏳';
+        
+        container.innerHTML += `
+            <tr class="mech-tr ${rowClass}">
+                <td class="mech-td">${item.time}</td>
+                <td class="mech-td">${item.plateNumber} <span style="font-size:16px; color:#888;">(${item.brand})</span></td>
+                <td class="mech-td" style="font-size:20px;">${item.repairType}</td>
+                <td class="mech-td">${statusText}</td>
+            </tr>`;
+    });
+}
 
             </script>
 </body>
