@@ -121,8 +121,12 @@ io.on('connection', (socket) => {
         let status = 'in_queue';
         if (data.isUrgent) {
             const now = new Date();
-            appointmentTime = now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-            status = 'called';
+            appointmentTime = now.toLocaleTimeString('uk-UA', { 
+        timeZone: 'Europe/Kyiv', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    status = 'called';
         }
 
         let detectedType = 'Сервіс';
