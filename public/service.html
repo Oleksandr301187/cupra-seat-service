@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUPRA SERVICE | Оформлення</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0b0e14;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        /* Округлена картка форми */
+        .card-form {
+            background: linear-gradient(135deg, #181e29 0%, #0e121a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 35px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        h2 { margin: 0 0 10px 0; color: #d35f29; text-transform: uppercase; font-size: 20px; }
+        label { font-size: 13px; color: #8a99ad; }
+        input, select, button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: #111622;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #d35f29;
+        }
+        button {
+            background: #d35f29;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        button:hover { background: #b84e1e; }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #8a99ad;
+            text-decoration: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <span style="font-weight: bold; letter-spacing: 1px;">CUPRA</span> SERVICE
+        </div>
+        <a href="/" class="back-btn">❮ На головну</a>
+    </div>
+
+    <div class="container">
+        <div class="card-form">
+            <h2>Нове авто в роботу</h2>
+            
+            <div>
+                <label>Номер заявки (SRV-xxx, KUZ-xxx, TIRE-xxx)</label>
+                <input type="text" id="orderId" placeholder="Наприклад: SRV-2026" required>
+            </div>
+
+            <div>
+                <label>Держномер авто (якщо немає — буде N/O)</label>
+                <input type="text" id="carNumber" placeholder="AA1111AA" style="text-transform: uppercase;">
+            </div>
+
+            <div>
+                <label>Призначити на пост</label>
+                <select id="postName">
+                    <option value="Пост 1">Пост 1 (Іван Сердюк)</option>
+                    <option value="Пост 2">Пост 2 (Олег Петроченко)</option>
+                    <option value="Малярка 1">Малярка 1 (Андрій Коваль)</option>
+                    <option value="Шиномонтаж">Шиномонтаж (Дмитро Гриць)</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Плановий час (хв)</label>
+                <input type="number" id="estimatedTime" value="120">
+            </div>
+
+            <button onclick="submitOrder()">Відправити в роботу</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        function submitOrder() {
+            const orderId = document.getElementById('orderId').value;
+            let carNumber = document.getElementById('carNumber').value;
+            const postName = document.getElementById('postName').value;
+            const estimatedTime = document.getElementById('estimatedTime').value;
+
+            if(!orderId) {
+                alert("Введіть номер заявки!");
+                return;
+            }
+
+            // Якщо номер порожній, ставимо N/O
+            if(!carNumber.trim()) {
+                carNumber = "N/O";
+            }
+
+            socket.emit('create_order', {
+                orderId: orderId,
+                carNumber: carNumber,
+                postName: postName,
+                estimatedTime: parseInt(estimatedTime),
+                masterName: "Олександр"
+            });
+
+            alert("Заявку успішно створено!");
+            document.getElementById('orderId').value = '';
+            document.getElementById('carNumber').value = '';
+        }
+    </script>
+</body>
+</html>
