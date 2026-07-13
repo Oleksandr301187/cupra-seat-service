@@ -489,9 +489,27 @@
             box.innerHTML = `<div class="stat-card stat-blue">🔧 В ЦЕХУ (В РОБОТІ): <span style="color:#007bff; font-size:20px;">${inRepair} авто</span></div><div class="stat-card stat-yellow">⏳ ОЧІКУЮТЬ ЗАЇЗДУ / ЧЕРГА: <span style="color:#ffcc00; font-size:20px;">${waiting} авто</span></div>`;
         }
 
-        function renderMonitorTab() {
+               function renderMonitorTab() {
             renderLiveStats('monitorStatsBox');
-            const container = document.getElementById('monitorRowsContainer'); if(!container) return; container.innerHTML = ''; let currentStateString = localQueue.map(i => `${i.id}-${i.repairType}-${i.post}-${i.partsStatus}-${i.mechanicName}`).join('|'); if (previousStateString !== "" && previousStateString !== currentStateString) { document.getElementById('cnapSound').play().catch(()=>{}); } previousStateString = currentStateString; let activePlaces = {}; localQueue.forEach(item => { let place = item.repairType === 'Сервіс' ? item.post : item.repairType; if (place !== 'Не вказано' && place !== 'Не призначено') { if (!activePlaces[place]) activePlaces[place] = []; activePlaces[place].push(item); } }); for (let place in activePlaces) { let cars = activePlaces[place]; let currentCar = cars.find(c => c.status === 'called'); let upcomingCars = cars.filter(c => c.status === 'in_queue'); let now = new Date(); let currentMinutes = now.getHours() * 60 + now.getMinutes(); if (currentCar) { container.innerHTML += `<tr class="mech-tr row-working"><td class="mech-td">${currentCar.time}</td><td class="mech-td">${currentCar.plateNumber} <span style="font-size:16px; color:#888;">(${currentCar.brand})</span></td><td class="mech-td" style="font-size:20px;">${currentCar.repairType==='Сервіс'?place+' — Майстер '+currentCar.mechanicName:place}</td><td class="mech-td" style="color:#007bff;">В РОБОТІ 🔧<span style="font-size:14px; color:#fff;">${currentCar.partsStatus==='assembled'?' (Деталі готові ✅)':''}</span></td></tr>`; } if (upcomingCars.length > 0) { upcomingCars.forEach(car => { let [cHour, cMin] = car.time.split(':').map(Number); let diff = (cHour * 60 + cMin) - currentMinutes; let rowClass = 'row-waiting', statusHtml = ''; if (diff > 0) statusHtml = `<span style="color:#ffcc00">До заїзду: ${diff} хв</span>`; else { rowClass = 'row-delayed'; statusHtml = `<span style="color:#ff4d4d">ЗАПІЗНЮЄТЬСЯ: ${Math.abs(diff)} хв ⏱</span>`; } container.innerHTML += `<tr class="mech-tr ${rowClass}"><td class="mech-td">${car.time}</td><td class="mech-td">${car.plateNumber} <span style="font-size:16px; color:#888;">(${car.brand})</span></td><td class="mech-td" style="font-size:20px;">${place}</td><td class="mech-td">${statusHtml}</td></tr>`; }); } } }
-    </script>
+            const container = document.getElementById('monitorRowsContainer');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            // Виводимо ВСІ авто з черги, навіть якщо вони ще не в роботі
+            localQueue.forEach(item => {
+                let rowClass = item.status === 'called' ? 'row-working' : 'row-waiting';
+                let statusText = item.status === 'called' ? 'В РОБОТІ 🔧' : 'Очікує в черзі ⏳';
+                
+                container.innerHTML += `
+                    <tr class="mech-tr ${rowClass}">
+                        <td class="mech-td">${item.time}</td>
+                        <td class="mech-td">${item.plateNumber} <span style="font-size:16px; color:#888;">(${item.brand})</span></td>
+                        <td class="mech-td" style="font-size:20px;">${item.repairType}</td>
+                        <td class="mech-td">${statusText}</td>
+                    </tr>`;
+            });
+        }
+
+            </script>
 </body>
 </html>
