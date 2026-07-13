@@ -76,12 +76,39 @@
         }
 
         /* ЕКРАН ЛОГІНУ */
-        #loginScreen { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; background: #0b0e14; }
-        .login-box { background: #161c24; padding: 40px; border-radius: 16px; border: 1px solid #222; width: 450px; position: relative; }
-        .login-box h2 { margin-top: 0; font-size: 26px; text-align: center; border-bottom: 2px solid #ff4d4d; padding-bottom: 15px; margin-bottom: 25px; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; position: relative; }
-        .form-group label { font-size: 13px; color: #94a3b8; font-weight: bold; text-transform: uppercase; }
-        .btn-login { background: #ff4d4d; width: 100%; padding: 15px; font-size: 18px; margin-top: 10px; }
+        <div id="mainMenu" class="menu-container" style="display:none; max-width: 500px; margin: 50px auto;">
+    <h2 style="text-align:center;">CUPRA SERVICE SYSTEM</h2>
+    
+    <!-- Картка СЕРВІС -->
+    <div class="menu-card" onclick="doLoginByRole('Сервіс')">
+        <div class="card-icon">🔧</div>
+        <div class="card-text">
+            <h3>СЕРВІС</h3>
+            <p>Автомобілі в роботі</p>
+        </div>
+        <div class="card-stats" id="stat-service">0 авто</div>
+    </div>
+
+    <!-- Картка МЕХАНІК -->
+    <div class="menu-card" onclick="doLoginByRole('Mechanic')">
+        <div class="card-icon">👨‍🔧</div>
+        <div class="card-text">
+            <h3>МЕХАНІК</h3>
+            <p>Мої завдання</p>
+        </div>
+        <div class="card-stats" id="stat-mechanic">0 робіт</div>
+    </div>
+
+    <!-- Картка ІНФО МОНІТОР -->
+    <div class="menu-card" onclick="doLoginByRole('Mon_Client')">
+        <div class="card-icon">📺</div>
+        <div class="card-text">
+            <h3>ІНФО МОНІТОР</h3>
+            <p>Показ повідомлень клієнтам</p>
+        </div>
+    </div>
+</div>
+
 
         /* ПІДКАЗКИ (АВТОДОПОВНЕННЯ) */
         .autocomplete-suggestions { 
@@ -490,8 +517,53 @@
         }
 
         function renderMonitorTab() {
-            renderLiveStats('monitorStatsBox');
-            const container = document.getElementById('monitorRowsContainer'); if(!container) return; container.innerHTML = ''; let currentStateString = localQueue.map(i => `${i.id}-${i.repairType}-${i.post}-${i.partsStatus}-${i.mechanicName}`).join('|'); if (previousStateString !== "" && previousStateString !== currentStateString) { document.getElementById('cnapSound').play().catch(()=>{}); } previousStateString = currentStateString; let activePlaces = {}; localQueue.forEach(item => { let place = item.repairType === 'Сервіс' ? item.post : item.repairType; if (place !== 'Не вказано' && place !== 'Не призначено') { if (!activePlaces[place]) activePlaces[place] = []; activePlaces[place].push(item); } }); for (let place in activePlaces) { let cars = activePlaces[place]; let currentCar = cars.find(c => c.status === 'called'); let upcomingCars = cars.filter(c => c.status === 'in_queue'); let now = new Date(); let currentMinutes = now.getHours() * 60 + now.getMinutes(); if (currentCar) { container.innerHTML += `<tr class="mech-tr row-working"><td class="mech-td">${currentCar.time}</td><td class="mech-td">${currentCar.plateNumber} <span style="font-size:16px; color:#888;">(${currentCar.brand})</span></td><td class="mech-td" style="font-size:20px;">${currentCar.repairType==='Сервіс'?place+' — Майстер '+currentCar.mechanicName:place}</td><td class="mech-td" style="color:#007bff;">В РОБОТІ 🔧<span style="font-size:14px; color:#fff;">${currentCar.partsStatus==='assembled'?' (Деталі готові ✅)':''}</span></td></tr>`; } if (upcomingCars.length > 0) { upcomingCars.forEach(car => { let [cHour, cMin] = car.time.split(':').map(Number); let diff = (cHour * 60 + cMin) - currentMinutes; let rowClass = 'row-waiting', statusHtml = ''; if (diff > 0) statusHtml = `<span style="color:#ffcc00">До заїзду: ${diff} хв</span>`; else { rowClass = 'row-delayed'; statusHtml = `<span style="color:#ff4d4d">ЗАПІЗНЮЄТЬСЯ: ${Math.abs(diff)} хв ⏱</span>`; } container.innerHTML += `<tr class="mech-tr ${rowClass}"><td class="mech-td">${car.time}</td><td class="mech-td">${car.plateNumber} <span style="font-size:16px; color:#888;">(${car.brand})</span></td><td class="mech-td" style="font-size:20px;">${place}</td><td class="mech-td">${statusHtml}</td></tr>`; }); } } }
+    renderLiveStats('monitorStatsBox');
+    const container = document.getElementById('monitorRowsContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    // Сортуємо: спочатку ті, що в роботі, потім ті, що в черзі
+    const sortedQueue = [...localQueue].sort((a, b) => {
+        if (a.status === 'called' && b.status !== 'called') return -1;
+        if (a.status !== 'called' && b.status === 'called') return 1;
+        return 0;
+    });
+
+    sortedQueue.forEach(item => {
+        // Якщо ремонт завершено, показуємо таймер (ваша логіка)
+        // Якщо ні — показуємо статус
+        let statusHtml = '';
+        let rowClass = 'row-waiting';
+
+        if (item.status === 'completed') {
+            const now = Date.now();
+            let timeLeft = Math.max(0, Math.floor((600000 - (now - item.completedAt)) / 1000));
+            rowClass = 'row-completed';
+            statusHtml = `<div class="timer-text">ВАШЕ АВТО ПОВЕРНУТЬ ЧЕРЕЗ ${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2, '0')}</div>`;
+        } 
+        else if (item.status === 'called') {
+            rowClass = 'row-working';
+            // Виводимо місце, навіть якщо механік ще не "прив'язаний" в адмінці
+            let place = item.post !== 'Не призначено' ? item.post : 'Сервісна зона';
+            statusHtml = `<span style="color:#007bff">В РОБОТІ 🔧</span><br><small>${place}</small>`;
+        } 
+        else {
+            // ЦЕЙ БЛОК ВІДПОВІДАЄ ЗА АВТО, ЯКІ ТІЛЬКИ-НО ЗАПИСАЛИ
+            rowClass = 'row-waiting';
+            statusHtml = `<span style="color:#ffcc00">Очікує в черзі</span>`;
+        }
+
+        // Рядок додається для ВСІХ авто, крім 'completed' (які ще не вийшли на таймер)
+        container.innerHTML += `
+            <tr class="mech-tr ${rowClass}">
+                <td class="mech-td">${item.time}</td>
+                <td class="mech-td">${item.plateNumber} <span style="font-size:16px; color:#888;">(${item.brand})</span></td>
+                <td class="mech-td">${item.repairType}</td>
+                <td class="mech-td">${statusHtml}</td>
+            </tr>`;
+    });
+}
+
     </script>
 </body>
 </html>
