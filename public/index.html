@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CUPRA | Live Queue Management System</title>
+  <!-- Tesseract.js для OCR-сканування -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <!-- Бібліотека для генерації QR-коду клієнта -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <style>
+    :root {
+      --cupra-copper: #c59b27;
+      --cupra-copper-dark: #8e6d15;
+      --bg-dark: #0b0e14;
+      --bg-card: #161c24;
+      --text-white: #ffffff;
+      --text-gray: #919eab;
+      --glass-bg: rgba(22, 28, 36, 0.7);
+      --glass-border: rgba(197, 155, 39, 0.15);
+      --status-waiting: #ffab00;
+      --status-working: #00b8d9;
+      --status-ready: #36b37e;
+      --status-error: #ff5630;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ЗАСТАВКА ЗАВАНТАЖЕННЯ З АВТО КУПРА */
+    #splashScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000 url('https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=1920') center/cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.8s ease-id;
+    }
+    #splashScreen::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(11, 14, 20, 0.85);
+      z-index: 1;
+    }
+    .splash-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+    .splash-logo {
+      width: 180px;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 0 15px var(--cupra-copper));
+      animation: pulse 2s infinite ease-in-out;
+    }
+    .splash-title {
+      font-size: 2.5rem;
+      font-weight: 300;
+      letter-spacing: 5px;
+      color: var(--text-white);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .splash-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(197,155,39,0.2);
+      border-top-color: var(--cupra-copper);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+    }
+
+    /* ЕКРАН АВТОРИЗАЦІЇ */
+    #authScreen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: radial-gradient(circle at center, #1c2331 0%, #0b0e14 100%);
+    }
+    .auth-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
+    .auth-title {
+      font-size: 1.8rem;
+      margin-bottom: 30px;
+      color: var(--cupra-copper);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .auth-select {
+      width: 100%;
+      padding: 15px;
+      background: #212b36;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    .auth-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--cupra-copper);
+      border: none;
+      color: var(--bg-dark);
+      font-weight: bold;
+      font-size: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .auth-btn:hover {
+      background: var(--text-white);
+      transform: translateY(-2px);
+    }
+
+    /* ВЕРХНЯ ШАПКА (Київський час, Погода) */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .logo-mini {
+      height: 40px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+    }
+    .weather-capsule {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .clock-capsule {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--cupra-copper);
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    /* БАНЕРИ-КАПСУЛИ (МЕНЮ) - Стиль Android 16 / One UI */
+    .nav-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 20px 40px;
+      justify-content: center;
+    }
+    .capsule-btn {
+      flex: 1;
+      min-width: 220px;
+      max-width: 280px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 15px 25px;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .capsule-btn:hover {
+      transform: scale(1.03);
+    }
+    .capsule-btn.active {
+      background: linear-gradient(135deg, var(--cupra-copper-dark), var(--cupra-copper));
+      color: var(--bg-dark);
+      border-color: transparent;
+    }
+    .capsule-btn.active .capsule-badge {
+      background: var(--bg-dark);
+      color: var(--cupra-copper);
+    }
+    .capsule-title {
+      font-size: 16px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .capsule-badge {
+      background: rgba(255,255,255,0.1);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    /* ГОЛОВНИЙ КОНТЕНТ */
+    .main-content {
+      flex: 1;
+      padding: 20px 40px;
+    }
+    .screen-section {
+      display: none;
+    }
+    .screen-section.active {
+      display: block;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* СТИЛІ ОВАЛЬНИХ КАРТОК (GLASSMORPHISM) */
+    .card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 25px;
+      margin-bottom: 25px;
+      backdrop-filter: blur(10px);
+    }
+    .card-title {
+      font-size: 20px;
+      color: var(--cupra-copper);
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(197, 155, 39, 0.3);
+      padding-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ТАБЛИЦІ */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+    }
+    th {
+      padding: 15px;
+      text-align: left;
+      color: var(--text-gray);
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+    td {
+      background: #1e2732;
+      padding: 18px 15px;
+      font-size: 15px;
+    }
+    tr td:first-child {
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+    }
+    tr td:last-child {
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+
+    /* БЛИМАННЯ РЯДКІВ (ДЛЯ НОВИХ АВТО ТА ЗАЯВОК) */
+    .pulse-row {
+      animation: rowFlash 2s infinite alternate;
+    }
+    @keyframes rowFlash {
+      0% { background-color: #1e2732; }
+      100% { background-color: rgba(197, 155, 39, 0.4); }
+    }
+
+    /* ФОРМИ ТА КНОПКИ */
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 18px;
+      background: #1e2732;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+      border-radius: 10px;
+      outline: none;
+      font-size: 15px;
+      margin-bottom: 15px;
+    }
+    input:focus {
+      border-color: var(--cupra-copper);
+    }
+    .btn {
+      background: var(--cupra-copper);
+      color: var(--bg-dark);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      font-size: 13px;
+    }
+    .btn:hover {
+      background: white;
+      transform: translateY(-2px);
+    }
+    .btn-danger {
+      background: var(--status-error);
+      color: white;
+    }
+
+    /* БЕЙДЖІ СТАТУСУ */
+    .badge {
+      padding: 6px 12px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: bold;
+      display: inline-block;
+    }
+    .badge-waiting { background: rgba(255, 171, 0, 0.2); color: var(--status-waiting); }
+    .badge-working { background: rgba(0, 184, 217, 0.2); color: var(--status-working); }
+    .badge-completed { background: rgba(54, 179, 126, 0.2); color: var(--status-ready); }
+    .badge-declined { background: rgba(255, 86, 48, 0.2); color: var(--status-error); }
+
+    /* ЕКРАН КЛІЄНТСЬКОГО ІНФО-МОНІТОРА */
+    .monitor-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .monitor-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+    .monitor-card.completed {
+      border-left: 8px solid var(--status-ready);
+      background: rgba(54, 179, 126, 0.05);
+    }
+    .monitor-card.working {
+      border-left: 8px solid var(--status-working);
+    }
+    .monitor-card.waiting {
+      border-left: 8px solid var(--status-waiting);
+    }
+    .monitor-card.declined {
+      border-left: 8px solid var(--status-error);
+    }
+    .timer-countdown {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--cupra-copper);
+    }
+
+    /* ЧАТИ ТА ПОВІДОМЛЕННЯ */
+    .chat-container {
+      display: flex;
+      gap: 20px;
+      height: 400px;
+    }
+    .chat-users {
+      width: 250px;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-messages {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .msg-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    .msg-item {
+      background: #212b36;
+      padding: 10px 15px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    /* БАНЕР ПОВІДОМЛЕННЯ ЗВЕРХУ */
+    #liveBanner {
+      position: fixed;
+      top: -150px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 500px;
+      background: var(--bg-card);
+      border: 2px solid var(--cupra-copper);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border-radius: 20px;
+      padding: 20px;
+      z-index: 10000;
+      transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #liveBanner.show {
+      top: 30px;
+    }
+
+    /* РОЗДІЛЕННЯ СЕРВІСУ НА ДВА ЕКРАНИ */
+    .service-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+    }
+
+    /* QR КОД АДМІНА */
+    #qrContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+      background: white;
+      border-radius: 15px;
+      width: fit-content;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ЗВУКОВИЙ СИГНАЛ -->
+  <audio id="alertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-84.wav" preload="auto"></audio>
+
+  <!-- ЗАСТАВКА ЗАВАНТАЖЕННЯ З АВТО КУПРА -->
+  <div id="splashScreen">
+    <div class="splash-content">
+      <img src="https://logodownload.org/wp-content/uploads/2019/10/cupra-logo.png" class="splash-logo" alt="Cupra Logo">
+      <h1 class="splash-title">CUPRA KYIV</h1>
+      <p style="color: var(--text-gray); font-weight: 300; letter-spacing: 2px;">Завантаження електронної черги...</p>
+      <div class="splash-spinner"></div>
+    </div>
+  </div>
+
+  <!-- ЕКРАН АВТОРИЗАЦІЇ -->
+  <div id="authScreen" style="display: none;">
+    <div class="auth-card">
+      <img src="https://logodownload.org/wp-content/uploads/2019/10/cupra-logo.png" style="width:100px; margin-bottom:20px;" alt="">
+      <h2 class="auth-title">Виберіть свій відділ</h2>
+      <select id="roleSelector" class="auth-select">
+        <option value="service">🔧 Сервісний відділ</option>
+        <option value="warehouse">📦 Склад</option>
+        <option value="master">👨‍🔧 Майстер цеху</option>
+        <option value="mechanic">🚗 Механіки</option>
+        <option value="body">🎨 Кузовний відділ</option>
+        <option value="warranty">🛡️ Гарантія / Допи</option>
+        <option value="admin">⚙️ Адміністратор</option>
+        <option value="client_monitor">📺 Інформаційний монітор</option>
+      </select>
+      <button onclick="login()" class="auth-btn">Увійти в систему</button>
+    </div>
+  </div>
+
+  <!-- ГОЛОВНИЙ ІНТЕРФЕЙС -->
+  <div id="appInterface" style="display: none;">
+    
+    <!-- Шапка системи -->
+    <div class="header-bar">
+      <div class="header-left">
+        <img src="https://logodownload.org/wp-content/uploads/2019/10/cupra-logo.png" class="logo-mini" alt="Cupra">
+        <span style="font-weight: bold; letter-spacing: 1px;">CUPRA LIVE QUEUE v1.1</span>
+        <span id="currentUserRoleBadge" class="badge badge-working"></span>
+      </div>
+      <div class="header-right">
+        <div class="weather-capsule">
+          <span>☀️ +24°C Київ</span>
+        </div>
+        <div id="liveClock" class="clock-capsule">--:--:--</div>
+      </div>
+    </div>
+
+    <!-- МЕНЮ-КАПСУЛИ (Android 16 style) -->
+    <div class="nav-container" id="navBar">
+      <button class="capsule-btn" id="nav-service" onclick="switchTab('service')">
+        <span class="capsule-title">🔧 Сервіс</span>
+        <span class="capsule-badge" id="badge-service">0</span>
+      </button>
+      <button class="capsule-btn" id="nav-warehouse" onclick="switchTab('warehouse')">
+        <span class="capsule-title">📦 Склад</span>
+        <span class="capsule-badge" id="badge-warehouse">0</span>
+      </button>
+      <button class="capsule-btn" id="nav-master" onclick="switchTab('master')">
+        <span class="capsule-title">👨‍🔧 Майстер цеху</span>
+        <span class="capsule-badge" id="badge-master">0</span>
+      </button>
+      <button class="capsule-btn" id="nav-mechanic" onclick="switchTab('mechanic')">
+        <span class="capsule-title">🚗 Механіки</span>
+        <span class="capsule-badge" id="badge-mechanic">0</span>
+      </button>
+      <button class="capsule-btn" id="nav-body" onclick="switchTab('body')">
+        <span class="capsule-title">🎨 Кузовний</span>
+        <span class="capsule-badge" id="badge-body">0</span>
+      </button>
+      <button class="capsule-btn" id="nav-warranty" onclick="switchTab('warranty')">
+        <span class="capsule-title">🛡️ Гарантія</span>
+        <span class="capsule-badge" id="badge-warranty">0</span>
+      </button>
+      <button class="capsule-btn" id="nav-admin" onclick="switchTab('admin')">
+        <span class="capsule-title">⚙️ Адмін</span>
+      </button>
+      <button class="capsule-btn" id="nav-client_monitor" onclick="switchTab('client_monitor')">
+        <span class="capsule-title">📺 Монітор</span>
+      </button>
+    </div>
+
+    <div class="main-content">
+      
+      <!-- СЕРВІС -->
+      <div id="screen-service" class="screen-section">
+        <div class="service-split">
+          <div class="card">
+            <h3 class="card-title">Прийом & Запис автомобіля</h3>
+            <label>Номер автомобіля (авто-великі літери):</label>
+            <input type="text" id="srvPlate" placeholder="AA1111AA" oninput="this.value = this.value.toUpperCase()">
+            <button class="btn" style="margin-bottom: 15px;" onclick="startOCR('srvPlate')">📸 Сканувати номер</button>
+            
+            <label>Заявка на ремонт (напр. TOZ0003086):</label>
+            <input type="text" id="srvTicket" placeholder="TOZ0003086" oninput="this.value = this.value.toUpperCase()">
+            <button class="btn" style="margin-bottom: 15px;" onclick="startOCR('srvTicket')">📸 Сканувати заявку</button>
+            
+            <label>Бренд автомобіля:</label>
+            <input type="text" id="srvBrand" placeholder="CUPRA">
+            
+            <label>Час запису:</label>
+            <input type="time" id="srvTime">
+
+            <button class="btn" onclick="addNewVehicle()">Створити запис</button>
+            <video id="ocrVideo" style="display:none; width:100%; border-radius: 12px; margin-top:15px;"></video>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">Записи на сьогодні / завтра</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Час / Авто</th>
+                  <th>Заявка</th>
+                  <th>Статус</th>
+                  <th>Дія</th>
+                </tr>
+              </thead>
+              <tbody id="serviceQueueTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- СКЛАД -->
+      <div id="screen-warehouse" class="screen-section">
+        <div class="card">
+          <h3 class="card-title">Збірка запчастин на замовлення</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Час / Авто</th>
+                <th>Заявка</th>
+                <th>Тип роботи</th>
+                <th>Стан збірки</th>
+                <th>Дія</th>
+              </tr>
+            </thead>
+            <tbody id="warehouseQueueTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- МАЙСТЕР ЦЕХУ -->
+      <div id="screen-master" class="screen-section">
+        <div class="card">
+          <h3 class="card-title">Розподіл постів та механіків</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Час / Авто</th>
+                <th>Тип ремонту</th>
+                <th>Пост</th>
+                <th>Механік</th>
+                <th>Дія</th>
+              </tr>
+            </thead>
+            <tbody id="masterQueueTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- МЕХАНІКИ -->
+      <div id="screen-mechanic" class="screen-section">
+        <div class="card">
+          <h3 class="card-title">Робоча зона механіків</h3>
+          <div id="mechanicsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+        </div>
+      </div>
+
+      <!-- КУЗОВНИЙ ВІДДІЛ -->
+      <div id="screen-body" class="screen-section">
+        <div class="card">
+          <h3 class="card-title">Кузовна & Малярна дільниця</h3>
+          <div id="bodyContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+        </div>
+      </div>
+
+      <!-- ГАРАНТІЯ / ДОПИ -->
+      <div id="screen-warranty" class="screen-section">
+        <div class="card">
+          <h3 class="card-title">Гарантійне обслуговування та Додаткове обладнання</h3>
+          <div id="warrantyContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+        </div>
+      </div>
+
+      <!-- ІНФО-МОНІТОР (ВЕЛИКИЙ ЕКРАН) -->
+      <div id="screen-client_monitor" class="screen-section">
+        <div class="card">
+          <div class="card-title">
+            <span>📺 ІНФОРМАЦІЙНЕ ТАБЛО КЛІЄНТІВ</span>
+            <span style="font-size: 14px; color: var(--text-gray);">Всі авто в реальному часі</span>
+          </div>
+          <div class="monitor-container" id="clientMonitorRows"></div>
+        </div>
+      </div>
+
+      <!-- АДМІНІСТРАТОР -->
+      <div id="screen-admin" class="screen-section">
+        <div class="card">
+          <h3 class="card-title">Налаштування Системи Електронної Черги</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+              <h4>Додати/Змінити Пост</h4>
+              <input type="text" id="admPostName" placeholder="Назва поста (напр. Пост 5)">
+              <input type="text" id="admPostMech" placeholder="ПІБ Механіка">
+              <select id="admPostZone">
+                <option value="service">Сервіс</option>
+                <option value="body">Кузовний відділ</option>
+                <option value="warranty">Гарантія / Допи</option>
+              </select>
+              <button class="btn" onclick="addPostAdmin()">Додати пост</button>
+              
+              <h4 style="margin-top: 20px;">Список постів</h4>
+              <div id="adminPostList" style="max-height: 200px; overflow-y: auto; margin-top:10px;"></div>
+            </div>
+
+            <div>
+              <h4>Коди ремонтів (TOZ0 тощо)</h4>
+              <input type="text" id="admCode" placeholder="Перші символи замовлення (напр. TOZ0)">
+              <input type="text" id="admCodeName" placeholder="Назва послуги (напр. ТО)">
+              <input type="number" id="admCodeDuration" placeholder="Плановий час (хв)">
+              <button class="btn" onclick="addCodeAdmin()">Додати код</button>
+
+              <h4 style="margin-top: 20px;">Список кодувань</h4>
+              <div id="adminCodeList" style="max-height: 200px; overflow-y: auto; margin-top:10px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="text-align: center;">
+          <h3 class="card-title">Універсальний QR-код для Вашого клієнта</h3>
+          <p style="color: var(--text-gray); margin-bottom: 15px;">Кожен клієнт може відсканувати цей QR-код на рецепції та дивитися за статусом свого авто на власному телефоні!</p>
+          <div id="qrContainer"></div>
+          <button class="btn" style="margin-top:15px;" onclick="window.print()">🖨️ Роздрукувати QR для рецепції</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- МЕНЕДЖЕР СПОВІЩЕНЬ ЧАТУ / ВІДДІЛІВ -->
+    <div id="chatSection" class="card" style="margin: 40px; display:none;">
+      <h3 class="card-title">📨 Двосторонній внутрішній зв'язок</h3>
+      <div class="chat-container">
+        <div class="chat-users">
+          <h4>Надіслати у відділ:</h4>
+          <label><input type="checkbox" value="service" class="chat-target-chk"> 🔧 Сервіс</label>
+          <label><input type="checkbox" value="warehouse" class="chat-target-chk"> 📦 Склад</label>
+          <label><input type="checkbox" value="master" class="chat-target-chk"> 👨‍🔧 Майстер цеху</label>
+          <label><input type="checkbox" value="mechanic" class="chat-target-chk"> 🚗 Механіки</label>
+          <label><input type="checkbox" value="body" class="chat-target-chk"> 🎨 Кузовний</label>
+          <label><input type="checkbox" value="warranty" class="chat-target-chk"> 🛡️ Гарантія</label>
+          <label><input type="checkbox" value="client_monitor" class="chat-target-chk"> 📺 Інфо-монітор</label>
+        </div>
+        <div class="chat-messages">
+          <div class="msg-list" id="chatMsgList"></div>
+          <div style="display: flex; gap: 10px; margin-top:10px;">
+            <input type="text" id="chatMessageInput" placeholder="Введіть текст повідомлення...">
+            <button class="btn" onclick="sendChatMessage()">Надіслати</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- БАНЕР ШВИДКИХ СПОВІЩЕНЬ ЗВЕРХУ -->
+  <div id="liveBanner">
+    <h3 id="bannerTitle" style="color: var(--cupra-copper);">🔔 СПОВІЩЕННЯ</h3>
+    <p id="bannerText" style="margin: 10px 0; font-size: 16px;"></p>
+    <button class="btn" onclick="hideBanner()">Зрозуміло</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let localQueue = [];
+    let localSettings = { posts: [], repairTypes: [] };
+    let currentUserRole = '';
+    let playedSoundSet = new Set();
+    let bannerTimeout;
+
+    // СТАРТ
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        document.getElementById('splashScreen').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('splashScreen').style.display = 'none';
+          document.getElementById('authScreen').style.display = 'flex';
+        }, 800);
+      }, 3000);
+
+      // Запуск годинника
+      setInterval(updateClock, 1000);
+    });
+
+    function updateClock() {
+      const now = new Date();
+      const options = { timeZone: "Europe/Kyiv", hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+      const timeString = new Intl.DateTimeFormat('uk-UA', options).format(now);
+      const clockElement = document.getElementById('liveClock');
+      if (clockElement) clockElement.innerText = timeString;
+    }
+
+    // Вхід в систему
+    function login() {
+      currentUserRole = document.getElementById('roleSelector').value;
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('appInterface').style.display = 'block';
+      document.getElementById('currentUserRoleBadge').innerText = document.getElementById('roleSelector').options[document.getElementById('roleSelector').selectedIndex].text;
+      
+      // Налаштовуємо доступні вкладки відповідно до ролі
+      setupPermissions();
+      generateQR();
+      
+      if(currentUserRole !== 'client_monitor') {
+        document.getElementById('chatSection').style.display = 'block';
+      }
+    }
+
+    function setupPermissions() {
+      // Показуємо всі меню для Адміна, для інших — приховуємо непотрібні вкладки за умовчанням
+      const allTabs = ['service', 'warehouse', 'master', 'mechanic', 'body', 'warranty', 'admin', 'client_monitor'];
+      allTabs.forEach(t => {
+        const btn = document.getElementById(`nav-${t}`);
+        if(btn) btn.style.display = (currentUserRole === 'admin') ? 'flex' : 'none';
+      });
+
+      // Спеціальні права
+      if(currentUserRole !== 'admin') {
+        const myBtn = document.getElementById(`nav-${currentUserRole}`);
+        if(myBtn) myBtn.style.display = 'flex';
+        // Інформаційний монітор доступний всім
+        document.getElementById('nav-client_monitor').style.display = 'flex';
+        switchTab(currentUserRole);
+      } else {
+        switchTab('service');
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.screen-section').forEach(screen => {
+        screen.classList.remove('active');
+      });
+      document.querySelectorAll('.capsule-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      const targetScreen = document.getElementById(`screen-${tabId}`);
+      if(targetScreen) targetScreen.classList.add('active');
+      const targetBtn = document.getElementById(`nav-${tabId}`);
+      if(targetBtn) targetBtn.classList.add('active');
+    }
+
+    // SOCKET.IO СЛУХАЧІ
+    socket.on('updateQueue', (queue) => {
+      localQueue = queue;
+      renderAll();
+    });
+
+    socket.on('updateSettings', (settings) => {
+      localSettings = settings;
+      renderAll();
+    });
+
+    socket.on('notifyNewVehicle', (vehicle) => {
+      // Блимання і звук
+      playAlert();
+      showTopBanner("🚗 НОВЕ АВТО", `Додано авто ${vehicle.plateNumber} (${vehicle.brand}) на час ${vehicle.time}`);
+    });
+
+    socket.on('notifyPartsStatus', ({ id, status, plateNumber }) => {
+      if (status === 'ready') {
+        playAlert();
+        showTopBanner("📦 СКЛАД: ГОТОВО", `Запчастини для автомобіля ${plateNumber} повністю зібрано!`);
+      }
+    });
+
+    socket.on('receiveMessage', (msg) => {
+      if (msg.targets.includes(currentUserRole) || currentUserRole === 'admin') {
+        playAlert();
+        showTopBanner(`📢 ПОВІДОМЛЕННЯ ВІД [${msg.sender.toUpperCase()}]`, msg.text);
+        
+        const list = document.getElementById('chatMsgList');
+        if(list) {
+          const item = document.createElement('div');
+          item.className = 'msg-item';
+          item.innerHTML = `<strong>[${msg.sender.toUpperCase()}]</strong>: ${msg.text}`;
+          list.appendChild(item);
+          list.scrollTop = list.scrollHeight;
+        }
+      }
+    });
+
+    function playAlert() {
+      const sound = document.getElementById('alertSound');
+      if(sound) {
+        sound.play().catch(e => console.log("Браузер заблокував авто-аудіо: ", e));
+      }
+    }
+
+    function showTopBanner(title, text) {
+      document.getElementById('bannerTitle').innerText = title;
+      document.getElementById('bannerText').innerText = text;
+      document.getElementById('liveBanner').classList.add('show');
+      
+      clearTimeout(bannerTimeout);
+      bannerTimeout = setTimeout(hideBanner, 20000); // Закриття за 20 сек
+    }
+
+    function hideBanner() {
+      document.getElementById('liveBanner').classList.remove('show');
+    }
+
+    // СТВОРЕННЯ АВТО СЕРВІСОМ
+    function addNewVehicle() {
+      const plate = document.getElementById('srvPlate').value.trim();
+      const ticket = document.getElementById('srvTicket').value.trim();
+      const brand = document.getElementById('srvBrand').value.trim() || 'CUPRA';
+      const time = document.getElementById('srvTime').value;
+
+      if(!plate || !time) {
+        alert("Вкажіть номер автомобіля та запланований час запису!");
+        return;
+      }
+
+      socket.emit('createVehicle', {
+        plateNumber: plate,
+        ticketNumber: ticket,
+        brand: brand,
+        time: time
+      });
+
+      document.getElementById('srvPlate').value = '';
+      document.getElementById('srvTicket').value = '';
+      document.getElementById('srvBrand').value = '';
+      document.getElementById('srvTime').value = '';
+    }
+
+    // OCR СКАНЕР (ВЕЛИКІ ЛІТЕРИ, КРАСИВА КАМЕРА)
+    async function startOCR(targetFieldId) {
+      const video = document.getElementById('ocrVideo');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        video.srcObject = stream;
+        video.style.display = 'block';
+        video.play();
+
+        setTimeout(async () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d').drawImage(video, 0, 0);
+          
+          // Вимикаємо камеру
+          stream.getTracks().forEach(track => track.stop());
+          video.style.display = 'none';
+
+          const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
+          let parsed = "";
+          if (targetFieldId === 'srvTicket') {
+            // Шукаємо замовлення (3 літери та 7-8 цифр, напр. TOZ0003086)
+            const regex = /[A-Z]{3}\d{7,8}/i;
+            const match = text.match(regex);
+            parsed = match ? match[0].toUpperCase() : "";
+          } else {
+            // Шукаємо звичайний номерний знак
+            parsed = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+          }
+
+          if (parsed) {
+            document.getElementById(targetFieldId).value = parsed;
+          } else {
+            alert("Не вдалося чітко розпізнати. Спробуйте ще раз.");
+          }
+        }, 3000);
+
+      } catch (err) {
+        alert("Помилка доступу до камери: " + err.message);
+      }
+    }
+
+    // ЗМІНА СТАТУСУ ТА ПЕРЕВЕДЕННЯ В РОБОТУ
+    function changeStatus(id, newStatus) {
+      if (newStatus === 'called') {
+        if(confirm("Автомобіль приїхав. Почати ремонт зараз?")) {
+          socket.emit('updateVehicleStatus', { id, status: 'called' });
+        }
+      } else {
+        socket.emit('updateVehicleStatus', { id, status: newStatus });
+      }
+    }
+
+    // НАДШИЛАННЯ ПОВІДОМЛЕННЯ В ЧАТ
+    function sendChatMessage() {
+      const text = document.getElementById('chatMessageInput').value.trim();
+      if(!text) return;
+      
+      const targets = [];
+      document.querySelectorAll('.chat-target-chk:checked').forEach(chk => {
+        targets.push(chk.value);
+      });
+
+      if(targets.length === 0) {
+        alert("Оберіть хоча б один відділ як отримувача!");
+        return;
+      }
+
+      socket.emit('sendMessage', {
+        sender: currentUserRole,
+        targets: targets,
+        text: text
+      });
+
+      document.getElementById('chatMessageInput').value = '';
+    }
+
+    // РЕНДЕРИНГ ВСІХ ЕКРАНІВ
+    function renderAll() {
+      renderService();
+      renderWarehouse();
+      renderMaster();
+      renderMechanics();
+      renderBody();
+      renderWarranty();
+      renderClientMonitor();
+      renderAdmin();
+      updateBadges();
+    }
+
+    function updateBadges() {
+      const counts = { service: 0, warehouse: 0, master: 0, mechanic: 0, body: 0, warranty: 0 };
+      
+      localQueue.forEach(item => {
+        if (item.status === 'in_queue') counts.service++;
+        if (item.partsStatus === 'pending' || item.partsStatus === 'gathering') counts.warehouse++;
+        if (item.status === 'called' && item.post === 'Не призначено') counts.master++;
+        
+        // Розподіляємо по зонах механіків
+        if (item.status === 'called' && item.post !== 'Не призначено') {
+          const postObj = localSettings.posts.find(p => p.name === item.post);
+          if (postObj) {
+            if (postObj.zone === 'service') counts.mechanic++;
+            if (postObj.zone === 'body') counts.body++;
+            if (postObj.zone === 'warranty') counts.warranty++;
+          }
+        }
+      });
+
+      for (const k in counts) {
+        const el = document.getElementById(`badge-${k}`);
+        if(el) el.innerText = counts[k];
+      }
+    }
+
+    // 1. СЕРВІС
+    function renderService() {
+      const tbody = document.getElementById('serviceQueueTable');
+      if(!tbody) return;
+      tbody.innerHTML = '';
+
+      localQueue.forEach(item => {
+        // Запис тільки на сьогодні і завтра (перевірка часу)
+        const isWaiting = item.status === 'in_queue';
+        const isDeclined = item.status === 'declined';
+        
+        let actionBtn = '';
+        if (isWaiting) {
+          actionBtn = `
+            <button class="btn" style="padding: 6px 12px; font-size:11px;" onclick="changeStatus('${item.id}', 'called')">🚀 В роботу</button>
+            <button class="btn btn-danger" style="padding: 6px 12px; font-size:11px;" onclick="changeStatus('${item.id}', 'declined')">❌ Відмова</button>
+          `;
+        }
+
+        const statusBadge = `<span class="badge badge-${item.status === 'called' ? 'working' : item.status === 'completed' ? 'completed' : item.status === 'declined' ? 'declined' : 'waiting'}">${item.status}</span>`;
+
+        tbody.innerHTML += `
+          <tr class="${item.isNew ? 'pulse-row' : ''}">
+            <td><strong>${item.time}</strong><br>${item.plateNumber} (${item.brand})</td>
+            <td>${item.ticketNumber || 'Без заявки'}</td>
+            <td>${statusBadge}</td>
+            <td>${actionBtn}</td>
+          </tr>
+        `;
+      });
+    }
+
+    // 2. СКЛАД
+    function renderWarehouse() {
+      const tbody = document.getElementById('warehouseQueueTable');
+      if(!tbody) return;
+      tbody.innerHTML = '';
+
+      // Спочатку очікує, потім збирається, потім зібрано
+      const sorted = [...localQueue].sort((a,b) => {
+        const order = { 'pending': 0, 'gathering': 1, 'ready': 2, 'completed': 3 };
+        return order[a.partsStatus] - order[b.partsStatus];
+      });
+
+      sorted.forEach(item => {
+        if (item.status === 'declined') return;
+        
+        let actionBtn = '';
+        if (item.partsStatus === 'pending') {
+          actionBtn = `<button class="btn" onclick="socket.emit('updatePartsStatus', { id: '${item.id}', status: 'gathering' })">▶️ Почати збірку</button>`;
+        } else if (item.partsStatus === 'gathering') {
+          actionBtn = `<button class="btn" style="background:var(--status-working);" onclick="socket.emit('updatePartsStatus', { id: '${item.id}', status: 'ready' })">✅ Завершити</button>`;
+        } else if (item.partsStatus === 'ready') {
+          actionBtn = `<span class="badge badge-completed">📦 Готово</span>`;
+        } else {
+          return; //Completed не виводимо
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${item.time}</strong><br>${item.plateNumber}</td>
+            <td>${item.ticketNumber || '—'}</td>
+            <td>${item.repairType}</td>
+            <td><span class="badge badge-${item.partsStatus === 'ready' ? 'completed' : item.partsStatus === 'gathering' ? 'working' : 'waiting'}">${item.partsStatus}</span></td>
+            <td>${actionBtn}</td>
+          </tr>
+        `;
+      });
+    }
+
+    // 3. МАЙСТЕР ЦЕХУ (Прив'язка пост-механік)
+    function renderMaster() {
+      const tbody = document.getElementById('masterQueueTable');
+      if(!tbody) return;
+      tbody.innerHTML = '';
+
+      const activePosts = localSettings.posts.filter(p => p.active);
+
+      localQueue.forEach(item => {
+        if(item.status !== 'called') return;
+
+        let postSelectOptions = `<option value="">-- Оберіть Пост --</option>`;
+        activePosts.forEach(post => {
+          postSelectOptions += `<option value="${post.name}" ${item.post === post.name ? 'selected' : ''}>${post.name} (${post.mechanic})</option>`;
+        });
+
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${item.time}</strong><br>${item.plateNumber}</td>
+            <td>${item.repairType}</td>
+            <td>
+              <select onchange="assignPost('${item.id}', this.value)" style="margin:0;">
+                ${postSelectOptions}
+              </select>
+            </td>
+            <td><strong>${item.mechanicName || 'Не призначено'}</strong></td>
+            <td>
+              <button class="btn" style="background:var(--status-ready); padding:8px 12px;" onclick="changeStatus('${item.id}', 'completed')">🏁 Завершити ремонт</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function assignPost(vehicleId, postName) {
+      const postObj = localSettings.posts.find(p => p.name === postName);
+      const mechanic = postObj ? postObj.mechanic : 'Не призначено';
+      socket.emit('updateVehicleStatus', {
+        id: vehicleId,
+        status: 'called',
+        postName: postName || 'Не призначено',
+        mechanicName: mechanic
+      });
+    }
+
+    // СПІЛЬНА ФУНКЦІЯ РЕНДЕРИНГУ ЗОН (МЕХАНІК, КУЗОВ, ГАРАНТІЯ)
+    function renderZoneCards(containerId, zoneName) {
+      const container = document.getElementById(containerId);
+      if(!container) return;
+      container.innerHTML = '';
+
+      const filtered = localQueue.filter(item => {
+        if (item.status !== 'called') return false;
+        const postObj = localSettings.posts.find(p => p.name === item.post);
+        return postObj && postObj.zone === zoneName;
+      });
+
+      if(filtered.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-gray);">Робочі автомобілі у цій зоні відсутні.</p>`;
+        return;
+      }
+
+      filtered.forEach(item => {
+        container.innerHTML += `
+          <div class="card" style="border: 1px solid var(--cupra-copper);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:24px; font-weight:bold; color:var(--cupra-copper);">${item.plateNumber}</span>
+              <span class="badge badge-working">${item.post}</span>
+            </div>
+            <div style="margin-top:15px; font-size:14px; line-height:1.6;">
+              <p>🚗 <strong>Бренд:</strong> ${item.brand}</p>
+              <p>📋 <strong>Заявка:</strong> ${item.ticketNumber || '—'}</p>
+              <p>🛠️ <strong>Робота:</strong> ${item.repairType}</p>
+              <p>👨‍🔧 <strong>Виконавець:</strong> ${item.mechanicName}</p>
+              <p>📦 <strong>Запчастини:</strong> <span class="badge badge-${item.partsStatus === 'ready' ? 'completed' : 'waiting'}">${item.partsStatus}</span></p>
+            </div>
+            <button class="btn" style="width:100%; margin-top:15px; background:var(--status-ready);" onclick="changeStatus('${item.id}', 'completed')">Завершити ремонт</button>
+          </div>
+        `;
+      });
+    }
+
+    function renderMechanics() { renderZoneCards('mechanicsContainer', 'service'); }
+    function renderBody() { renderZoneCards('bodyContainer', 'body'); }
+    function renderWarranty() { renderZoneCards('warrantyContainer', 'warranty'); }
+
+    // 4. ІНФО-МОНІТОР ДЛЯ КЛІЄНТІВ
+    function renderClientMonitor() {
+      const container = document.getElementById('clientMonitorRows');
+      if(!container) return;
+      container.innerHTML = '';
+
+      const now = Date.now();
+
+      localQueue.forEach(item => {
+        let statusText = '';
+        let timerText = '';
+        let rowClass = 'waiting';
+
+        if (item.status === 'completed') {
+          rowClass = 'completed';
+          statusText = '<span style="color:var(--status-ready)">РЕМОНТ ЗАВЕРШЕНО ✅</span>';
+          const remaining = Math.max(0, 600000 - (now - item.completedAt)); // 10 хвилин звіт
+          const mins = Math.floor(remaining / 60000);
+          const secs = Math.floor((remaining % 60000) / 1000);
+          timerText = `Авто повернуть через: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        } else if (item.status === 'called') {
+          rowClass = 'working';
+          statusText = '<span style="color:var(--status-working)">В РОБОТІ 🔧</span>';
+          const durationMs = now - item.arrivedAt;
+          
+          // Розрахунок часу ремонту (формат 1 день 03:25)
+          const totalMins = Math.floor(durationMs / 60000);
+          const hours = Math.floor(totalMins / 60);
+          const mins = totalMins % 60;
+          if (hours >= 24) {
+            const days = Math.floor(hours / 24);
+            const remainingHours = hours % 24;
+            timerText = `Триває: ${days} дн. ${remainingHours} год ${mins} хв`;
+          } else {
+            timerText = `Триває: ${hours < 10 ? '0' : ''}${hours}:${mins < 10 ? '0' : ''}${mins}`;
+          }
+        } else if (item.status === 'declined') {
+          rowClass = 'declined';
+          statusText = '<span style="color:var(--status-error)">КЛІЄНТ ВІДМОВИВСЯ ❌</span>';
+          timerText = "Видалення з табло...";
+        } else {
+          // Очікує прийому / Запізнення
+          const schedParts = item.time.split(':');
+          const schedTime = new Date();
+          schedTime.setHours(parseInt(schedParts[0]), parseInt(schedParts[1]), 0, 0);
+
+          if (now > schedTime.getTime()) {
+            rowClass = 'declined';
+            statusText = '<span style="color:var(--status-error)">КЛІЄНТ ЗАПІЗНЮЄТЬСЯ ⏰</span>';
+            const delayMins = Math.floor((now - schedTime.getTime()) / 60000);
+            timerText = `Запізнення на ${delayMins} хв`;
+          } else {
+            rowClass = 'waiting';
+            statusText = 'Очікує прийому 🟡';
+            timerText = `Заплановано на ${item.time}`;
+          }
+        }
+
+        container.innerHTML += `
+          <div class="monitor-card ${rowClass}">
+            <div>
+              <h2 style="color:var(--cupra-copper); font-size:28px;">${item.plateNumber}</h2>
+              <p style="color:var(--text-gray); font-size:16px;">${item.brand} | Робота: ${item.repairType}</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size:20px; font-weight:bold; margin-bottom:5px;">${statusText}</div>
+              <div class="timer-countdown">${timerText}</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // 5. АДМІНІСТРАТОР
+    function renderAdmin() {
+      const postsDiv = document.getElementById('adminPostList');
+      if(postsDiv) {
+        postsDiv.innerHTML = '';
+        localSettings.posts.forEach(post => {
+          postsDiv.innerHTML += `
+            <div style="background:#212b36; padding:10px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong>${post.name}</strong> (${post.mechanic})<br>
+                <span style="font-size:11px; color:var(--text-gray);">Зона: ${post.zone}</span>
+              </div>
+              <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deletePostAdmin(${post.id})">Видалити</button>
+            </div>
+          `;
+        });
+      }
+
+      const codesDiv = document.getElementById('adminCodeList');
+      if(codesDiv) {
+        codesDiv.innerHTML = '';
+        localSettings.repairTypes.forEach(t => {
+          codesDiv.innerHTML += `
+            <div style="background:#212b36; padding:10px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong>${t.code}</strong> — ${t.name}<br>
+                <span style="font-size:11px; color:var(--text-gray);">Тривалість: ${t.duration} хв</span>
+              </div>
+              <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteCodeAdmin('${t.code}')">Видалити</button>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function addPostAdmin() {
+      const name = document.getElementById('admPostName').value.trim();
+      const mech = document.getElementById('admPostMech').value.trim();
+      const zone = document.getElementById('admPostZone').value;
+      if(!name || !mech) return;
+
+      localSettings.posts.push({
+        id: Date.now(),
+        name: name,
+        mechanic: mech,
+        zone: zone,
+        active: true
+      });
+      socket.emit('saveAdminSettings', localSettings);
+      document.getElementById('admPostName').value = '';
+      document.getElementById('admPostMech').value = '';
+    }
+
+    function deletePostAdmin(id) {
+      localSettings.posts = localSettings.posts.filter(p => p.id !== id);
+      socket.emit('saveAdminSettings', localSettings);
+    }
+
+    function addCodeAdmin() {
+      const code = document.getElementById('admCode').value.trim();
+      const name = document.getElementById('admCodeName').value.trim();
+      const duration = parseInt(document.getElementById('admCodeDuration').value);
+      if(!code || !name) return;
+
+      localSettings.repairTypes.push({
+        code: code,
+        name: name,
+        duration: duration || 30
+      });
+      socket.emit('saveAdminSettings', localSettings);
+      document.getElementById('admCode').value = '';
+      document.getElementById('admCodeName').value = '';
+      document.getElementById('admCodeDuration').value = '';
+    }
+
+    function deleteCodeAdmin(code) {
+      localSettings.repairTypes = localSettings.repairTypes.filter(c => c.code !== code);
+      socket.emit('saveAdminSettings', localSettings);
+    }
+
+    // ГЕНЕРАЦІЯ УНІВЕРСАЛЬНОГО QR КОДУ
+    function generateQR() {
+      fetch('/api/server-url')
+        .then(res => res.json())
+        .then(data => {
+          const qrDiv = document.getElementById("qrContainer");
+          if(qrDiv) {
+            qrDiv.innerHTML = "";
+            new QRCode(qrDiv, {
+              text: data.url,
+              width: 180,
+              height: 180,
+              colorDark : "#0b0e14",
+              colorLight : "#ffffff",
+              correctLevel : QRCode.CorrectLevel.H
+            });
+          }
+        })
+        .catch(err => console.error("Не вдалося згенерувати QR код:", err));
+    }
+
+    // Автоматичне оновлення моніторів у реальному часі для таймерів
+    setInterval(() => {
+      if(currentUserRole === 'client_monitor') {
+        renderClientMonitor();
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
