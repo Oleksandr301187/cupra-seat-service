@@ -208,8 +208,6 @@
         </div>
     </div>
 
-    <div id="loginScreen">
-        <div class="login-box">
             <!-- НОВЕ МЕНЮ В СТИЛІ CUPRA -->
 <div id="mainMenu" class="menu-container">
     <h2 style="text-align:center; color: white;">CUPRA SERVICE SYSTEM</h2>
@@ -240,38 +238,6 @@
         </div>
     </div>
 </div>
- onsubmit="event.preventDefault(); doLogin();">
-                <div class="form-group">
-                    <label>Оберіть роль</label>
-                    <select id="userRole" onchange="toggleRoleFields()">
-                        <option value="Сервіс">Сервіс</option>
-                        <option value="Mechanic">Механік / Майстер цеху</option>
-                        <option value="Склад">Склад запчастин</option>
-                        <option value="Mon_Client">Інформаційне табло клієнта 📺</option>
-                        <option value="Admin">Адміністратор системи ⚙️</option>
-                    </select>
-                </div>
-
-                <div id="staffFields" class="form-group">
-                    <label>Прізвище *</label>
-                    <input type="text" id="userLastName" placeholder="Введіть мінімум 3 літери" autocomplete="off" oninput="handleLastNameInput()">
-                    <div id="autocompleteBox" class="autocomplete-suggestions"></div>
-                </div>
-
-                <div id="staffFields2" class="form-group">
-                    <label>Ім'я *</label>
-                    <input type="text" id="userFirstName" placeholder="Введіть ім'я" autocomplete="off">
-                </div>
-
-                <div id="adminFields" class="form-group" style="display:none;">
-                    <label>Пароль Адміністратора *</label>
-                    <input type="password" id="adminPassword" placeholder="•••••">
-                </div>
-
-                <button type="submit" class="btn-universal btn-login">Увійти в систему 🔑</button>
-            </form>
-        </div>
-    </div>
 
     <div id="appInterface">
         <div class="user-status-bar">
