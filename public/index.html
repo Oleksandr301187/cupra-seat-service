@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUPRA SERVICE SYSTEM</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0b0e14;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 20px;
+            box-sizing: border-box;
+        }
+
+        .logo-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-main {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: #ffffff;
+        }
+
+        .logo-sub {
+            font-size: 11px;
+            color: #8a99ad;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .live-clock {
+            font-size: 14px;
+            color: #ff3e1d;
+            background: rgba(255, 62, 29, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            border: 1px solid rgba(255, 62, 29, 0.2);
+        }
+
+        .menu-container {
+            width: 100%;
+            max-width: 650px;
+            padding: 0 20px 40px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-sizing: border-box;
+        }
+
+        /* Стиль округлених віджетів-банерів (як банер погоди) */
+        .widget-banner {
+            background: linear-gradient(135deg, #181e29 0%, #0e121a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 35px; /* Ультра-закруглення */
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-decoration: none;
+            color: #ffffff;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .widget-banner:hover {
+            transform: translateY(-3px);
+            border-color: rgba(211, 95, 41, 0.3);
+            box-shadow: 0 12px 30px rgba(211, 95, 41, 0.1);
+        }
+
+        .widget-left {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .widget-icon {
+            font-size: 26px;
+            background: rgba(255, 255, 255, 0.03);
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .widget-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .widget-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .widget-desc {
+            font-size: 13px;
+            color: #707e94;
+            margin-top: 4px;
+        }
+
+        .widget-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .widget-stats {
+            text-align: right;
+        }
+
+        .stats-count {
+            font-size: 16px;
+            font-weight: 700;
+            color: #d35f29; /* Фірмовий мідний колір */
+        }
+
+        .stats-label {
+            font-size: 12px;
+            color: #4b5563;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .widget-arrow {
+            font-size: 16px;
+            color: #334155;
+        }
+
+        /* Індивідуальні кольорові маркери */
+        .b-service { border-left: 6px solid #d35f29; }
+        .b-storage { border-left: 6px solid #38bdf8; }
+        .b-mechanic { border-left: 6px solid #4ade80; }
+        .b-monitor { border-left: 6px solid #a855f7; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo-box">
+            <span class="logo-main">CUPRA</span>
+            <span class="logo-sub">Service System</span>
+        </div>
+        <div class="live-clock" id="kyiv-clock">00:00:00</div>
+    </div>
+
+    <div class="menu-container">
+        <!-- СЕРВІС -->
+        <a href="/service.html" class="widget-banner b-service">
+            <div class="widget-left">
+                <div class="widget-icon">🔧</div>
+                <div class="widget-details">
+                    <span class="widget-title">Сервіс</span>
+                    <span class="widget-desc">Оформлення, таймери, статус клієнтів</span>
+                </div>
+            </div>
+            <div class="widget-right">
+                <div class="widget-stats">
+                    <span class="stats-count" id="count-service">...</span>
+                    <span class="stats-label">в роботі</span>
+                </div>
+                <div class="widget-arrow">❯</div>
+            </div>
+        </a>
+
+        <!-- СКЛАД -->
+        <a href="/storage.html" class="widget-banner b-storage">
+            <div class="widget-left">
+                <div class="widget-icon">📦</div>
+                <div class="widget-details">
+                    <span class="widget-title">Склад деталей</span>
+                    <span class="widget-desc">Запити запчастин та комплектація</span>
+                </div>
+            </div>
+            <div class="widget-right">
+                <div class="widget-stats">
+                    <span class="stats-count" id="count-storage">...</span>
+                    <span class="stats-label">запитів</span>
+                </div>
+                <div class="widget-arrow">❯</div>
+            </div>
+        </a>
+
+        <!-- МЕХАНІКИ -->
+        <a href="/mechanics.html" class="widget-banner b-mechanic">
+            <div class="widget-left">
+                <div class="widget-icon">⚙️</div>
+                <div class="widget-details">
+                    <span class="widget-title">Екран механіків</span>
+                    <span class="widget-desc">Розподіл завдань по постах цеху</span>
+                </div>
+            </div>
+            <div class="widget-right">
+                <div class="widget-stats">
+                    <span class="stats-count" id="count-posts">...</span>
+                    <span class="stats-label">активних постів</span>
+                </div>
+                <div class="widget-arrow">❯</div>
+            </div>
+        </a>
+
+        <!-- ІНФО-МОНІТОР -->
+        <a href="/monitor.html" class="widget-banner b-monitor">
+            <div class="widget-left">
+                <div class="widget-icon">🖥️</div>
+                <div class="widget-details">
+                    <span class="widget-title">Інфо-Монітор</span>
+                    <span class="widget-desc">Клієнтське табло сповіщень та готовності</span>
+                </div>
+            </div>
+            <div class="widget-right">
+                <div class="widget-stats">
+                    <span class="stats-count" id="count-notifications">0</span>
+                    <span class="stats-label">сповіщень</span>
+                </div>
+                <div class="widget-arrow">❯</div>
+            </div>
+        </a>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('kyiv-clock').innerText = now.toLocaleTimeString('uk-UA', { timeZone: 'Europe/Kyiv' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        socket.on('init_state', (state) => {
+            updateCounters(state);
+        });
+
+        socket.on('state_updated', (state) => {
+            updateCounters(state);
+        });
+
+        function updateCounters(state) {
+            let serviceActive = 0;
+            let activePosts = 0;
+            
+            Object.keys(state.posts).forEach(key => {
+                if(state.posts[key].active) activePosts++;
+                if(state.posts[key].currentCar) serviceActive++;
+            });
+
+            document.getElementById('count-service').innerText = `${serviceActive} авто`;
+            document.getElementById('count-storage').innerText = `${state.storageQueue.length}`;
+            document.getElementById('count-posts').innerText = `${activePosts}`;
+            document.getElementById('count-notifications').innerText = `${state.notifications.length}`;
+        }
+    </script>
+</body>
+</html>
