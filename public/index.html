@@ -566,6 +566,18 @@
             </tr>`;
     });
 }
+// Цей код спрацює, як тільки сторінка завантажиться
+window.addEventListener('DOMContentLoaded', () => {
+    // 1. Через 3 секунди ховаємо заставку
+    setTimeout(() => {
+        const splash = document.getElementById('splashScreen');
+        if (splash) splash.style.display = 'none';
+        
+        // 2. Показуємо наше нове меню
+        const menu = document.getElementById('mainMenu');
+        if (menu) menu.style.display = 'block';
+    }, 3000);
+});
 
     </script>
 </body>
