@@ -172,19 +172,77 @@
             </div>
         </div>
     </div>
-
-            <!-- НОВЕ МЕНЮ В СТИЛІ CUPRA -->
-     <div id="mainMenu" class="menu-container" style="display:block;">
-    <h2 style="text-align:center; color: white;">CUPRA SERVICE SYSTEM</h2>
-    <div class="menu-card" onclick="doLoginByRole('Сервіс')">
-        <div class="card-icon">🔧</div>
-        <div class="card-text">
-            <h3>СЕРВІС</h3>
-            <p>Автомобілі в роботі</p>
+    <!-- НОВЕ МЕНЮ В СТИЛІ CUPRA -->
+    <div id="mainMenu" class="menu-container" style="display:none;">
+        <h2 style="text-align:center; color: white;">CUPRA SERVICE SYSTEM</h2>
+        
+        <div class="menu-card" onclick="doLoginByRole('Сервіс')">
+            <div class="card-icon">🔧</div>
+            <div class="card-text">
+                <h3>СЕРВІС</h3>
+                <p>Автомобілі в роботі</p>
+            </div>
+            <div class="card-stats" id="stat-service">0 авто</div>
         </div>
-        <div class="card-stats" id="stat-service">0 авто</div>
+
+        <div class="menu-card" onclick="doLoginByRole('Mechanic')">
+            <div class="card-icon">👨‍🔧</div>
+            <div class="card-text">
+                <h3>МЕХАНІК</h3>
+                <p>Мої завдання</p>
+            </div>
+            <div class="card-stats" id="stat-mechanic">0 робіт</div>
+        </div>
+
+        <div class="menu-card" onclick="doLoginByRole('Mon_Client')">
+            <div class="card-icon">📺</div>
+            <div class="card-text">
+                <h3>ІНФО МОНІТОР</h3>
+                <p>Показ повідомлень клієнтам</p>
+            </div>
+        </div>
     </div>
 
+    <!-- Interface and Script -->
+    <div id="appInterface">
+        <!-- ... (ваш існуючий блок appInterface) ... -->
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let localQueue = [];
+        // ... (ваші змінні)
+
+        function doLoginByRole(role) {
+            const userData = { lastName: "Користувач", firstName: "Системи", role: role, password: "" };
+            socket.emit('registerUser', userData);
+        }
+
+        // Функція рендеру монітора БЕЗ вкладених функцій
+        function renderMonitorTab() {
+            renderLiveStats('monitorStatsBox');
+            const container = document.getElementById('monitorRowsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            localQueue.sort((a, b) => (a.status === 'called' ? -1 : 1)).forEach(item => {
+                let statusHtml = item.status === 'called' ? `<span style="color:#007bff">В РОБОТІ 🔧</span>` : `<span style="color:#ffcc00">Очікує</span>`;
+                container.innerHTML += `<tr class="mech-tr"><td>${item.time}</td><td>${item.plateNumber}</td><td>${item.repairType}</td><td>${statusHtml}</td></tr>`;
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                const menu = document.getElementById('mainMenu');
+                if (splash) splash.style.display = 'none';
+                if (menu) menu.style.display = 'block';
+            }, 3000);
+        });
+    </script>
+
+     
     </div>
 
     <div id="mainMenu" class="menu-container" style="display:none;">
