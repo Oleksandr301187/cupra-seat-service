@@ -75,41 +75,6 @@
             100% { width: 100%; }
         }
 
-        /* ЕКРАН ЛОГІНУ */
-        <div id="mainMenu" class="menu-container" style="display:block; max-width: 500px; margin: 50px auto;">
-    <h2 style="text-align:center;">CUPRA SERVICE SYSTEM</h2>
-    
-    <!-- Картка СЕРВІС -->
-    <div class="menu-card" onclick="doLoginByRole('Сервіс')">
-        <div class="card-icon">🔧</div>
-        <div class="card-text">
-            <h3>СЕРВІС</h3>
-            <p>Автомобілі в роботі</p>
-        </div>
-        <div class="card-stats" id="stat-service">0 авто</div>
-    </div>
-
-    <!-- Картка МЕХАНІК -->
-    <div class="menu-card" onclick="doLoginByRole('Mechanic')">
-        <div class="card-icon">👨‍🔧</div>
-        <div class="card-text">
-            <h3>МЕХАНІК</h3>
-            <p>Мої завдання</p>
-        </div>
-        <div class="card-stats" id="stat-mechanic">0 робіт</div>
-    </div>
-
-    <!-- Картка ІНФО МОНІТОР -->
-    <div class="menu-card" onclick="doLoginByRole('Mon_Client')">
-        <div class="card-icon">📺</div>
-        <div class="card-text">
-            <h3>ІНФО МОНІТОР</h3>
-            <p>Показ повідомлень клієнтам</p>
-        </div>
-    </div>
-</div>
-
-
         /* ПІДКАЗКИ (АВТОДОПОВНЕННЯ) */
         .autocomplete-suggestions { 
             position: absolute; 
@@ -209,9 +174,8 @@
     </div>
 
             <!-- НОВЕ МЕНЮ В СТИЛІ CUPRA -->
-<div id="mainMenu" class="menu-container">
+     <div id="mainMenu" class="menu-container" style="display:block;">
     <h2 style="text-align:center; color: white;">CUPRA SERVICE SYSTEM</h2>
-    
     <div class="menu-card" onclick="doLoginByRole('Сервіс')">
         <div class="card-icon">🔧</div>
         <div class="card-text">
@@ -220,6 +184,13 @@
         </div>
         <div class="card-stats" id="stat-service">0 авто</div>
     </div>
+
+    </div>
+
+    <div id="mainMenu" class="menu-container" style="display:none;">
+        <h2 style="text-align:center; color: white;">CUPRA SERVICE SYSTEM</h2>
+
+
 
     <div class="menu-card" onclick="doLoginByRole('Mechanic')">
         <div class="card-icon">👨‍🔧</div>
