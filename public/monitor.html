@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUPRA INFO MONITOR</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #07090e;
+            color: #fff;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Головна сітка монітора */
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            height: calc(100vh - 80px);
+            padding: 20px;
+            gap: 20px;
+            box-sizing: border-box;
+        }
+
+        .panel-block {
+            background: #111622;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #d35f29;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Контейнер інтерактивних банерів сповіщень (Drag/Resize) */
+        .notification-overlay-zone {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            pointer-events: none;
+        }
+
+        .movable-banner {
+            position: absolute;
+            width: 450px;
+            background: linear-gradient(135deg, #b45309 0%, #78350f 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            pointer-events: auto;
+            cursor: move;
+            animation: pulse-border 1.5s infinite alternate;
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: #d35f29; box-shadow: 0 0 10px rgba(211,95,41,0.5); }
+            100% { border-color: #fb923c; box-shadow: 0 0 25px rgba(251,146,60,0.8); }
+        }
+
+        .movable-banner h3 { margin: 0 0 8px 0; font-size: 20px; color: #fff; }
+        .movable-banner p { margin: 0; font-size: 16px; color: #ffedd5; line-height: 1.4; }
+
+        /* Таблиця статусів авто для клієнтів */
+        .monitor-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .monitor-table th {
+            text-align: left;
+            padding: 14px;
+            color: #4b5563;
+            border-bottom: 2px solid rgba(255,255,255,0.05);
+            font-size: 16px;
+        }
+
+        .monitor-table td {
+            padding: 18px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .status-work { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+        .status-ready { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
+    </style>
+</head>
+<body>
+
+    <!-- Аудіо для миттєвих сповіщень на моніторі -->
+    <audio id="alert-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-84.wav" preload="auto"></audio>
+
+    <div style="padding: 20px 40px; background: #0e121a; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 24px; font-weight: 800; letter-spacing: 2px;">CUPRA LIVE MONITOR</span>
+        <div id="clock" style="font-size: 22px; color: #d35f29; font-weight: bold;">00:00</div>
+    </div>
+
+    <div class="monitor-grid">
+        <div class="panel-block">
+            <div class="panel-title">Автомобілі в сервісі</div>
+            <table class="monitor-table">
+                <thead>
+                    <tr>
+                        <th>Держномер</th>
+                        <th>Заявка</th>
+                        <th>Пост</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody id="cars-table-body">
+                    <!-- Заповнюється динамічно з сервера -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel-block">
+            <div class="panel-title">Готові до видачі</div>
+            <div id="ready-list" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Перелік готових авто -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Зона для відображення спливаючих вікон сповіщень -->
+    <div class="notification-overlay-zone" id="notification-zone"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const alertSound = document.getElementById('alert-sound');
+
+        function updateClock() {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+        }
+        setInterval(updateClock, 1000);
+
+        socket.on('init_state', renderMonitor);
+        socket.on('state_updated', renderMonitor);
+
+        socket.on('new_notification_alert', (notification) => {
+            alertSound.play().catch(e => console.log("Потрібна взаємодія з екраном для звуку"));
+            spawnMovableBanner(notification);
+        });
+
+        function renderMonitor(state) {
+            const tbody = document.getElementById('cars-table-body');
+            const readyList = document.getElementById('ready-list');
+            tbody.innerHTML = '';
+            readyList.innerHTML = '';
+
+            Object.keys(state.posts).forEach(postName => {
+                const post = state.posts[postName];
+                if (post.currentCar) {
+                    const car = post.currentCar;
+                    const row = `<tr>
+                        <td style="color: #ffca28;">${car.carNumber}</td>
+                        <td>${car.orderId}</td>
+                        <td>${postName}</td>
+                        <td><span class="status-badge status-work">В роботі</span></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                }
+            });
+        }
+
+        // Логіка створення, переміщення (Drag) та збереження координат банера
+        function spawnMovableBanner(notification) {
+            const zone = document.getElementById('notification-zone');
+            
+            // Перевіряємо чи є збережені налаштування позиції користувача
+            const savedTop = localStorage.getItem('banner_top') || '150px';
+            const savedLeft = localStorage.getItem('banner_left') || '50px';
+
+            const banner = document.createElement('div');
+            banner.className = 'movable-banner';
+            banner.style.top = savedTop;
+            banner.style.left = savedLeft;
+            banner.innerHTML = `
+                <h3>⚠️ УВАГА КЛІЄНТАМ</h3>
+                <p>${notification.message}</p>
+            `;
+
+            // Логіка перетягування мишкою/тачем
+            let isDragging = false;
+            let offsetX, offsetY;
+
+            banner.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                offsetX = e.clientX - banner.getBoundingClientRect().left;
+                offsetY = e.clientY - banner.getBoundingClientRect().top;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const x = e.clientX - offsetX;
+                const y = e.clientY - offsetY;
+                banner.style.left = `${x}px`;
+                banner.style.top = `${y}px`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    localStorage.setItem('banner_top', banner.style.top);
+                    localStorage.setItem('banner_left', banner.style.left);
+                }
+            });
+
+            zone.appendChild(banner);
+
+            // Автоматичне зникнення вікна згідно з налаштованим таймером сервера
+            setTimeout(() => {
+                banner.remove();
+            }, notification.duration);
+        }
+    </script>
+</body>
+</html>
