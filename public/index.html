@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cupra & Seat Center Kyiv</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B0E14; /* Фірмовий матовий Cupra Dark */
+            color: #E2E8F0;
+            overflow-x: hidden;
+        }
+        /* One UI 8.5 Squircle закруглення */
+        .oneui-card {
+            border-radius: 28px;
+            background: #151A24;
+            border: 1px solid rgba(192, 125, 52, 0.15); /* Тонкий мідний контур */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        .oneui-btn {
+            border-radius: 20px;
+            transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+        }
+        .oneui-btn:active {
+            transform: scale(0.95);
+            opacity: 0.85;
+        }
+        /* Мідна кольорова гама Cupra Copper */
+        .color-cupra {
+            color: #D1A153; 
+        }
+        .bg-cupra {
+            background-color: #D1A153;
+        }
+        .border-cupra {
+            border-color: #D1A153;
+        }
+        /* Анімації для банерів */
+        @keyframes slideIn {
+            from { transform: translateY(-100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.3s cubic-bezier(0.2, 0, 0, 1) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-6">
+
+    <!-- СИСТЕМНИЙ ХЕДЕР -->
+    <header class="w-full max-w-6xl mx-auto flex items-center justify-between mb-6 pb-4 border-b border-neutral-800">
+        <div class="flex items-center space-x-2">
+            <span class="text-xs uppercase tracking-widest bg-amber-600/20 text-[#D1A153] px-3 py-1 rounded-full font-bold">SEAT & CUPRA ЦЕНТР КИЇВ</span>
+        </div>
+        <button id="backBtn" onclick="goToMainMenu()" class="oneui-btn bg-neutral-800 hover:bg-neutral-700 text-sm px-4 py-2 flex items-center space-x-1 hidden">
+            <span>← Назад</span>
+        </button>
+    </header>
+
+    <!-- ГОЛОВНИЙ КОНТЕЙНЕР -->
+    <main class="w-full max-w-6xl mx-auto flex-1 flex flex-col justify-center">
+
+        <!-- 1. ГОЛОВНЕ МЕНЮ (Вибір розділу) -->
+        <div id="mainMenu" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div onclick="switchTab('service')" class="oneui-card p-6 cursor-pointer hover:border-[#D1A153] transition duration-300 flex flex-col justify-between h-48">
+                <div>
+                    <h3 class="text-2xl font-bold">Сервіс</h3>
+                    <p class="text-neutral-400 text-sm mt-1">Оформлення, робота та статус ремонту</p>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span id="badgeService" class="bg-amber-600/20 text-[#D1A153] text-xs font-bold px-3 py-1 rounded-full">В роботі: 0</span>
+                    <span class="text-2xl">→</span>
+                </div>
+            </div>
+
+            <div onclick="switchTab('mechanics')" class="oneui-card p-6 cursor-pointer hover:border-[#D1A153] transition duration-300 flex flex-col justify-between h-48">
+                <div>
+                    <h3 class="text-2xl font-bold">Запис до механіків</h3>
+                    <p class="text-neutral-400 text-sm mt-1">Монітор ремзони ЦНАП-стайл</p>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span id="badgeMechanics" class="bg-amber-600/20 text-[#D1A153] text-xs font-bold px-3 py-1 rounded-full">В роботі: 0</span>
+                    <span class="text-2xl">→</span>
+                </div>
+            </div>
+
+            <div onclick="switchTab('warehouse')" class="oneui-card p-6 cursor-pointer hover:border-[#D1A153] transition duration-300 flex flex-col justify-between h-48">
+                <div>
+                    <h3 class="text-2xl font-bold">Склад</h3>
+                    <p class="text-neutral-400 text-sm mt-1">Підбір запчастин для ТО та ремонту</p>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span id="badgeWarehouse" class="bg-amber-600/20 text-[#D1A153] text-xs font-bold px-3 py-1 rounded-full">Нових: 0</span>
+                    <span class="text-2xl">→</span>
+                </div>
+            </div>
+
+            <div onclick="switchTab('admin')" class="oneui-card p-6 cursor-pointer hover:border-[#D1A153] transition duration-300 flex flex-col justify-between h-48">
+                <div>
+                    <h3 class="text-2xl font-bold">Адміністратор</h3>
+                    <p class="text-neutral-400 text-sm mt-1">Налаштування кодів нарядів та постів</p>
+                </div>
+                <div class="flex justify-end"><span class="text-2xl">→</span></div>
+            </div>
+
+            <div onclick="switchTab('mobileRegistration')" class="oneui-card p-6 cursor-pointer hover:border-[#D1A153] transition duration-300 flex flex-col justify-between h-48 border-dashed border-[#D1A153]/40">
+                <div>
+                    <h3 class="text-2xl font-bold text-[#D1A153]">Мобільний запис</h3>
+                    <p class="text-neutral-400 text-sm mt-1">Покроковий майстер оформлення авто</p>
+                </div>
+                <div class="flex justify-end"><span class="text-2xl">→</span></div>
+            </div>
+
+            <div onclick="switchTab('infoMonitor')" class="oneui-card p-6 cursor-pointer hover:border-[#D1A153] transition duration-300 flex flex-col justify-between h-48 bg-neutral-950/40">
+                <div>
+                    <h3 class="text-2xl font-bold text-amber-500">Інформаційний монітор</h3>
+                    <p class="text-neutral-400 text-sm mt-1">Клієнтський екран видачі та статусів</p>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span id="badgeMonitor" class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full">Активно: 0</span>
+                    <span class="text-2xl">→</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. ВКЛАДКА: СЕРВІС -->
+        <div id="tabService" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-3xl font-bold text-white">Сервісна Приймальня</h2>
+                <div class="flex space-x-2">
+                    <button onclick="openCustomMessageModal('monitor')" class="oneui-btn bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs px-4 py-2">
+                        ✉ Сповіщення Інфо.М
+                    </button>
+                    <button onclick="openCustomMessageModal('all')" class="oneui-btn bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs px-4 py-2">
+                        ✉ Сповістити Склад
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Ліва колонка: Запис -->
+                <div class="oneui-card p-6 lg:col-span-5 space-y-4">
+                    <h3 class="text-lg font-bold text-[#D1A153]">Оформлення заїзду</h3>
+                    
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Держ. Номер</label>
+                        <input type="text" id="srvPlate" oninput="this.value = this.value.toUpperCase()" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#D1A153]">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Номер наряду / замовлення</label>
+                        <input type="text" id="srvOrder" placeholder="Напр. TOZ0-449" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#D1A153]">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Марка авто</label>
+                            <select id="srvBrand" onchange="toggleBrandInput('srvBrand', 'srvCustomBrandBlock')" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2.5 text-white focus:outline-none">
+                                <option value="Seat & Cupra">Seat & Cupra</option>
+                                <option value="Audi">Audi</option>
+                                <option value="VW">VW</option>
+                                <option value="Skoda">Skoda</option>
+                                <option value="Porsche">Porsche</option>
+                                <option value="Інша">Інша...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Тип цеху</label>
+                            <select id="srvType" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2.5 text-white focus:outline-none">
+                                <option value="Сервіс">Сервіс</option>
+                                <option value="Кузовний цех">Кузовний цех</option>
+                                <option value="Шиномонтаж">Шиномонтаж</option>
+                                <option value="Детейлінг">Детейлінг</option>
+                                <option value="Мийка">Мийка</option>
+                                <option value="Малярний цех">Малярний цех</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="srvCustomBrandBlock" class="hidden">
+                        <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Власна марка</label>
+                        <input type="text" id="srvCustomBrand" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2.5 text-white focus:outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Вибір Посту / Майстра</label>
+                            <select id="srvPost" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2.5 text-white focus:outline-none">
+                                <!-- Буде наповнено з адмінки -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Час запису</label>
+                            <select id="srvTime" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2.5 text-white focus:outline-none">
+                                <!-- 9:00 до 17:00 -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 grid grid-cols-2 gap-3">
+                        <button onclick="createOrder(false)" class="oneui-btn bg-[#D1A153] hover:bg-[#b88c42] text-neutral-950 font-bold py-3 text-sm">Записати</button>
+                        <button onclick="createOrder(true)" class="oneui-btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 text-sm">Взяти на зараз</button>
+                    </div>
+                </div>
+
+                <!-- Права колонка: Записані авто -->
+                <div class="oneui-card p-6 lg:col-span-7 space-y-4">
+                    <h3 class="text-lg font-bold">Активні замовлення на приймальні</h3>
+                    <div id="serviceQueue" class="space-y-3 overflow-y-auto max-h-[500px] pr-1">
+                        <!-- Динамічний список замовлень -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. ВКЛАДКА: ЗАПИС ДО МЕХАНІКІВ (МОНІТОР РЕМЗОНИ) -->
+        <div id="tabMechanics" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-3xl font-bold">Запис до Механіків</h2>
+                <span class="text-sm text-neutral-400">Монітор активності ремзони</span>
+            </div>
+
+            <div class="oneui-card p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-neutral-800 text-neutral-400 text-xs uppercase tracking-wider">
+                                <th class="pb-3">Авто / Держ. Номер</th>
+                                <th class="pb-3">Наряд / Робота</th>
+                                <th class="pb-3">Виконавець / Пост</th>
+                                <th class="pb-3">Статус & Таймер</th>
+                                <th class="pb-3 text-right">Дія</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mechanicsTableBody" class="divide-y divide-neutral-800/50">
+                            <!-- Рядки заповнюються JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. ВКЛАДКА: СКЛАД -->
+        <div id="tabWarehouse" class="hidden space-y-6">
+            <h2 class="text-3xl font-bold">Склад Запчастин</h2>
+            <div id="warehouseList" class="space-y-4">
+                <!-- Замовлення на запчастини -->
+            </div>
+        </div>
+
+        <!-- 5. ВКЛАДКА: АДМІНІСТРАТОР -->
+        <div id="tabAdmin" class="hidden space-y-6">
+            <h2 class="text-3xl font-bold">Панель Адміністратора</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Налаштування кодів нарядів -->
+                <div class="oneui-card p-6 space-y-4">
+                    <h3 class="text-lg font-bold text-[#D1A153]">Коди нормо-годин (нарядів)</h3>
+                    <div class="space-y-3">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="text-neutral-400 border-b border-neutral-800">
+                                    <th class="pb-2">Символ (код)</th>
+                                    <th class="pb-2">Опис роботи</th>
+                                    <th class="pb-2">Час (хв / год:хв)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminNaryadTable">
+                                <!-- 3 строки по дефолту -->
+                            </tbody>
+                        </table>
+                        <button onclick="saveAdminNaryads()" class="oneui-btn w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 text-xs font-semibold mt-2">
+                            Зберегти конфігурацію нарядів
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Налаштування Постів -->
+                <div class="oneui-card p-6 space-y-4">
+                    <h3 class="text-lg font-bold text-[#D1A153]">Активні пости та механіки</h3>
+                    <div class="space-y-2 overflow-y-auto max-h-[350px]" id="adminPostsList">
+                        <!-- 7 постів генеруються динамічно -->
+                    </div>
+                    <button onclick="saveAdminPosts()" class="oneui-btn w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 text-xs font-semibold">
+                        Зберегти зміни постів
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. ВКЛАДКА: МОБІЛЬНИЙ ЗАПИС -->
+        <div id="tabMobileRegistration" class="hidden max-w-md mx-auto w-full">
+            <div class="oneui-card p-6 space-y-6">
+                <div class="flex justify-between items-center border-b border-neutral-800 pb-3">
+                    <h2 class="text-xl font-bold text-[#D1A153]">Новий клієнт</h2>
+                    <span id="mobileStepIndicator" class="text-xs text-neutral-400 font-bold uppercase">Крок 1 з 4</span>
+                </div>
+
+                <!-- Step 1: Plate -->
+                <div id="mobStep1" class="space-y-4">
+                    <label class="block text-sm font-semibold text-neutral-300">Введіть державний номер авто:</label>
+                    <input type="text" id="mobPlate" oninput="this.value = this.value.toUpperCase()" placeholder="Наприклад, AA1111AA" class="w-full bg-neutral-900 border border-neutral-700 rounded-2xl px-4 py-3 text-white text-lg text-center uppercase tracking-widest focus:outline-none focus:border-[#D1A153]">
+                    <p class="text-xs text-neutral-500">Якщо номер відсутній, залиште поле пустим — буде надано статус «№ N/O».</p>
+                    <button onclick="nextMobileStep(2)" class="oneui-btn w-full bg-[#D1A153] hover:bg-[#b88c42] text-neutral-950 font-bold py-3 text-center">Далі →</button>
+                </div>
+
+                <!-- Step 2: Order -->
+                <div id="mobStep2" class="hidden space-y-4">
+                    <label class="block text-sm font-semibold text-neutral-300">Введіть код / номер замовлення:</label>
+                    <input type="text" id="mobOrder" placeholder="Наприклад, TOZ0" class="w-full bg-neutral-900 border border-neutral-700 rounded-2xl px-4 py-3 text-white text-lg text-center focus:outline-none focus:border-[#D1A153]">
+                    <div class="flex space-x-2">
+                        <button onclick="prevMobileStep(1)" class="oneui-btn w-1/3 bg-neutral-800 text-white py-3">Назад</button>
+                        <button onclick="nextMobileStep(3)" class="oneui-btn w-2/3 bg-[#D1A153] text-neutral-950 font-bold py-3">Далі →</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Brand -->
+                <div id="mobStep3" class="hidden space-y-4">
+                    <label class="block text-sm font-semibold text-neutral-300">Оберіть марку транспортного засобу:</label>
+                    <select id="mobBrand" onchange="toggleBrandInput('mobBrand', 'mobCustomBrandBlock')" class="w-full bg-neutral-900 border border-neutral-700 rounded-2xl px-4 py-3 text-white focus:outline-none">
+                        <option value="Seat & Cupra">Seat & Cupra</option>
+                        <option value="Audi">Audi</option>
+                        <option value="VW">VW</option>
+                        <option value="Skoda">Skoda</option>
+                        <option value="Porsche">Porsche</option>
+                        <option value="Інша">Інша...</option>
+                    </select>
+                    <div id="mobCustomBrandBlock" class="hidden">
+                        <input type="text" id="mobCustomBrand" placeholder="Назва марки авто" class="w-full bg-neutral-900 border border-neutral-700 rounded-2xl px-4 py-3 text-white focus:outline-none">
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="prevMobileStep(2)" class="oneui-btn w-1/3 bg-neutral-800 text-white py-3">Назад</button>
+                        <button onclick="nextMobileStep(4)" class="oneui-btn w-2/3 bg-[#D1A153] text-neutral-950 font-bold py-3">Далі →</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Post & Finish -->
+                <div id="mobStep4" class="hidden space-y-4">
+                    <label class="block text-sm font-semibold text-neutral-300">Оберіть пост та тип ремонту:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="mobPost" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl p-2.5 text-xs text-white focus:outline-none">
+                            <!-- Наповнюється JS -->
+                        </select>
+                        <select id="mobType" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl p-2.5 text-xs text-white focus:outline-none">
+                            <option value="Сервіс">Сервіс</option>
+                            <option value="Мийка">Мийка</option>
+                            <option value="Шиномонтаж">Шиномонтаж</option>
+                            <option value="Кузовний цех">Кузовний цех</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-2 pt-2">
+                        <button onclick="prevMobileStep(3)" class="oneui-btn w-1/3 bg-neutral-800 text-white py-3">Назад</button>
+                        <button onclick="finishMobileRegistration()" class="oneui-btn w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3">Записати авто</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. ВКЛАДКА: ІНФОРМАЦІЙНИЙ МОНІТОР (Клієнтський екран) -->
+        <div id="tabInfoMonitor" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-3xl font-bold text-white flex items-center space-x-2">
+                    <span class="inline-block w-3.5 h-3.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Інформаційне Табло Клієнтів</span>
+                </h2>
+                <span class="text-neutral-400 text-sm">Оновлюється автоматично</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Колонка Очікується / Прямує -->
+                <div class="oneui-card p-6 space-y-4">
+                    <h3 class="text-xl font-semibold text-[#D1A153] border-b border-neutral-800 pb-2">Готуються до обслуговування</h3>
+                    <div id="monitorWaitingList" class="space-y-4">
+                        <!-- Авто в очікуванні за годину або що запізнюються -->
+                    </div>
+                </div>
+
+                <!-- Колонка В роботі / Готово -->
+                <div class="oneui-card p-6 space-y-4">
+                    <h3 class="text-xl font-semibold text-[#D1A153] border-b border-neutral-800 pb-2">Обслуговування на постах</h3>
+                    <div id="monitorActiveList" class="space-y-4">
+                        <!-- В роботі + плановий час видачі -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- СИСТЕМНІ СЛИВНІ БАНЕРИ (NOTIFICATIONS) -->
+    <div id="notificationArea" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4 space-y-3 pointer-events-none">
+        <!-- Повідомлення відображатимуться тут -->
+    </div>
+
+    <!-- МОДАЛКА ВІДМОВИ (ВЕРСІЯ ДЛЯ СЕРВІСУ) -->
+    <div id="declineModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50 p-4">
+        <div class="oneui-card p-6 max-w-sm w-full space-y-4">
+            <h3 class="text-xl font-bold">Скасування замовлення</h3>
+            <p class="text-neutral-300 text-sm">Ви дійсно хочете видалити це замовлення з системи?</p>
+            <div class="flex space-x-3 pt-2">
+                <button id="declineCancel" class="oneui-btn w-1/2 bg-neutral-800 text-white py-2.5">Ні</button>
+                <button id="declineConfirm" class="oneui-btn w-1/2 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5">Так, видалити</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ЗМІНИ ПОСТУ (У МЕХАНІКА) -->
+    <div id="editPostModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50 p-4">
+        <div class="oneui-card p-6 max-w-sm w-full space-y-4">
+            <h3 class="text-xl font-bold">Редагувати виконавця</h3>
+            <div>
+                <label class="block text-xs text-neutral-400 mb-1">Пост & Механік</label>
+                <select id="editPostSelector" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white">
+                    <!-- Заповнюється JS -->
+                </select>
+            </div>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeEditPostModal()" class="oneui-btn w-1/2 bg-neutral-800 text-white py-2.5">Скасувати</button>
+                <button id="editPostConfirm" class="oneui-btn w-1/2 bg-[#D1A153] text-neutral-950 font-bold py-2.5">Зберегти</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ДОДАТКОВОГО ЧАСУ (У МЕХАНІКА) -->
+    <div id="extraTimeModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50 p-4">
+        <div class="oneui-card p-6 max-w-sm w-full space-y-4">
+            <h3 class="text-xl font-bold">Потрібно більше часу</h3>
+            <p class="text-neutral-400 text-xs">Зазначте додатковий час (наприклад, 0:30 для 30 хвилин або 1:15 для години п'ятнадцяти).</p>
+            <div>
+                <input type="text" id="extraTimeValue" placeholder="0:30" class="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-[#D1A153]">
+            </div>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeExtraTimeModal()" class="oneui-btn w-1/2 bg-neutral-800 text-white py-2.5">Назад</button>
+                <button id="extraTimeConfirm" class="oneui-btn w-1/2 bg-amber-600 hover:bg-amber-700 text-white py-2.5">Застосувати</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА СПОВІЩЕНЬ (ЧАТ / ПОВІДОМЛЕННЯ) -->
+    <div id="customMessageModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50 p-4">
+        <div class="oneui-card p-6 max-w-sm w-full space-y-4">
+            <h3 id="msgModalTitle" class="text-xl font-bold">Надіслати повідомлення</h3>
+            <div>
+                <textarea id="customMsgText" rows="3" placeholder="Введіть текст повідомлення..." class="w-full bg-neutral-900 border border-neutral-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-[#D1A153]"></textarea>
+            </div>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeCustomMessageModal()" class="oneui-btn w-1/2 bg-neutral-800 text-white py-2.5">Скасувати</button>
+                <button id="customMsgSend" class="oneui-btn w-1/2 bg-[#D1A153] text-neutral-950 font-bold py-2.5">Надіслати</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- СКРИПТ КЕРУВАННЯ ТА ЛОГІКИ -->
+    <script>
+        // --- ДАТА-БЕКЕНД І СТРУКТУРИ ДАНИХ (В ПАМ'ЯТІ) ---
+        let orders = []; // Масив замовлень автосервісу
+        let adminNaryads = []; // Довідник нарядів
+        let adminPosts = []; // Список постів
+
+        // Ініціалізація годинника (системного)
+        function getSystemTime() {
+            return new Date();
+        }
+
+        // Синтез звуку Дзвінка (Web Audio API)
+        function playBellSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = audioCtx.currentTime;
+                // Перша нота
+                let osc1 = audioCtx.createOscillator();
+                let gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(880, now); // A5
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 1.2);
+
+                // Друга нота (з затримкою)
+                setTimeout(() => {
+                    let osc2 = audioCtx.createOscillator();
+                    let gain2 = audioCtx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(1109, audioCtx.currentTime); // C#6
+                    gain2.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.start(audioCtx.currentTime);
+                    osc2.stop(audioCtx.currentTime + 1.5);
+                }, 200);
+            } catch(e) { console.log('Аудіоконтекст заблокований', e); }
+        }
+
+        // --- ІНІЦІАЛІЗАЦІЯ ДАНИХ ---
+        function initData() {
+            // Завантаження / генерація нарядів
+            const savedNaryads = localStorage.getItem('cupra_naryads');
+            if (savedNaryads) {
+                adminNaryads = JSON.parse(savedNaryads);
+            } else {
+                adminNaryads = [
+                    { symbol: 'TOZ0', desc: 'Технічне обслуговування', time: '30' },
+                    { symbol: 'DIAG', desc: 'Діагностика підвіски', time: '15' },
+                    { symbol: 'REMP', desc: 'Ремонт гальм', time: '1:30' }
+                ];
+                localStorage.setItem('cupra_naryads', JSON.stringify(adminNaryads));
+            }
+
+            // Завантаження / генерація постів
+            const savedPosts = localStorage.getItem('cupra_posts');
+            if (savedPosts) {
+                adminPosts = JSON.parse(savedPosts);
+            } else {
+                adminPosts = [
+                    { id: 1, name: 'Пост 1', worker: 'Іванов І.', active: true },
+                    { id: 2, name: 'Пост 2', worker: 'Петров С.', active: true },
+                    { id: 3, name: 'Пост 3', worker: 'Сидоров А.', active: true },
+                    { id: 4, name: 'Пост 4', worker: 'Коваленко О.', active: false },
+                    { id: 5, name: 'Пост 5', worker: 'Бондар Д.', active: false },
+                    { id: 6, name: 'Пост 6', worker: 'Клименко Я.', active: false },
+                    { id: 7, name: 'Пост 7', worker: 'Шевченко В.', active: false }
+                ];
+                localStorage.setItem('cupra_posts', JSON.stringify(adminPosts));
+            }
+
+            // Наповнення годинної сітки на приймальні
+            const srvTimeSelect = document.getElementById('srvTime');
+            srvTimeSelect.innerHTML = '';
+            for (let h = 9; h <= 17; h++) {
+                const hourStr = h < 10 ? '0' + h : h;
+                srvTimeSelect.appendChild(new Option(`${hourStr}:00`, `${hourStr}:00`));
+                if (h !== 17) {
+                    srvTimeSelect.appendChild(new Option(`${hourStr}:30`, `${hourStr}:30`));
+                }
+            }
+            
+            renderAdminLists();
+            updateDropdowns();
+            startSystemEngine();
+        }
+
+        // Оновлення полів селектів із постами
+        function updateDropdowns() {
+            const srvPost = document.getElementById('srvPost');
+            const mobPost = document.getElementById('mobPost');
+            const editPostSelector = document.getElementById('editPostSelector');
+
+            const optionsHTML = adminPosts
+                .filter(p => p.active)
+                .map(p => `<option value="${p.id}">${p.name} (${p.worker || 'Без механіка'})</option>`)
+                .join('');
+
+            srvPost.innerHTML = optionsHTML;
+            mobPost.innerHTML = optionsHTML;
+            editPostSelector.innerHTML = optionsHTML;
+        }
+
+        // --- АДМІНІСТРАТОР: РЕНДЕР ТА ЗБЕРЕЖЕННЯ ---
+        function renderAdminLists() {
+            // Наряди
+            const nTable = document.getElementById('adminNaryadTable');
+            nTable.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const item = adminNaryads[i] || { symbol: '', desc: '', time: '' };
+                nTable.innerHTML += `
+                    <tr class="border-b border-neutral-800/40">
+                        <td class="py-2"><input type="text" id="admSym_${i}" value="${item.symbol}" class="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-white w-20 text-xs"></td>
+                        <td class="py-2"><input type="text" id="admDesc_${i}" value="${item.desc}" class="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-white w-full text-xs"></td>
+                        <td class="py-2"><input type="text" id="admTime_${i}" value="${item.time}" class="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-white w-16 text-xs"></td>
+                    </tr>
+                `;
+            }
+
+            // Пости
+            const pList = document.getElementById('adminPostsList');
+            pList.innerHTML = '';
+            adminPosts.forEach((post, index) => {
+                pList.innerHTML += `
+                    <div class="flex items-center justify-between bg-neutral-900/60 p-3 rounded-2xl border border-neutral-800/80">
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox" id="postAct_${index}" ${post.active ? 'checked' : ''} class="w-4 h-4 rounded accent-[#D1A153]">
+                            <span class="font-semibold text-sm text-white">${post.name}</span>
+                        </div>
+                        <input type="text" id="postWork_${index}" value="${post.worker}" placeholder="ПІП Механіка" class="bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-1.5 text-xs text-white w-48">
+                    </div>
+                `;
+            });
+        }
+
+        function saveAdminNaryads() {
+            const temp = [];
+            for (let i = 0; i < 3; i++) {
+                const sym = document.getElementById(`admSym_${i}`).value.trim();
+                const desc = document.getElementById(`admDesc_${i}`).value.trim();
+                const time = document.getElementById(`admTime_${i}`).value.trim();
+                if (sym) {
+                    temp.push({ symbol: sym, desc, time });
+                }
+            }
+            adminNaryads = temp;
+            localStorage.setItem('cupra_naryads', JSON.stringify(adminNaryads));
+            showNotification('Адмінка', 'Дані нарядів успішно збережено!', 'cupra');
+        }
+
+        function saveAdminPosts() {
+            adminPosts.forEach((post, index) => {
+                post.active = document.getElementById(`postAct_${index}`).checked;
+                post.worker = document.getElementById(`postWork_${index}`).value.trim();
+            });
+            localStorage.setItem('cupra_posts', JSON.stringify(adminPosts));
+            updateDropdowns();
+            showNotification('Адмінка', 'Пости та виконавці успішно оновлені!', 'cupra');
+        }
+
+        // --- УТИЛІТИ ЧАСУ ТА ВИЗНАЧЕННЯ ---
+        function parseMinutes(timeStr) {
+            if (!timeStr) return 30; // дефолт
+            if (timeStr.includes(':')) {
+                const parts = timeStr.split(':');
+                return (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10);
+            }
+            return parseInt(timeStr, 10) || 30;
+        }
+
+        function formatMinutes(minutes) {
+            if (minutes <= 99) return `${minutes} хв`;
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            return `${h}:${m < 10 ? '0' + m : m}`;
+        }
+
+        // Визначаємо замовлення за його номером
+        function parseOrderType(orderNo) {
+            if (!orderNo) return { desc: 'Сервіс', time: 30 };
+            
+            for (const item of adminNaryads) {
+                if (orderNo.toUpperCase().startsWith(item.symbol.toUpperCase())) {
+                    return { desc: item.desc, time: parseMinutes(item.time) };
+                }
+            }
+            return { desc: 'Сервіс', time: 30 };
+        }
+
+        function toggleBrandInput(selectId, blockId) {
+            const selectVal = document.getElementById(selectId).value;
+            const block = document.getElementById(blockId);
+            if (selectVal === 'Інша') {
+                block.classList.remove('hidden');
+            } else {
+                block.classList.add('hidden');
+            }
+        }
+
+        // --- ДОДАВАННЯ ЗАМОВЛЕНЬ (СЕРВІС / МОБІЛЬНИЙ) ---
+        function createOrder(isImmediate = false) {
+            let plate = document.getElementById('srvPlate').value.trim().toUpperCase();
+            let orderNo = document.getElementById('srvOrder').value.trim();
+            let brand = document.getElementById('srvBrand').value;
+            let type = document.getElementById('srvType').value;
+            let postId = document.getElementById('srvPost').value;
+            let timeStr = document.getElementById('srvTime').value;
+
+            if (!orderNo) {
+                alert('Номер заявки є обов\'язковим до заповнення!');
+                return;
+            }
+
+            if (brand === 'Інша') {
+                brand = document.getElementById('srvCustomBrand').value.trim() || 'Інше авто';
+            }
+
+            executeOrderCreation({ plate, orderNo, brand, type, postId, timeStr, isImmediate });
+
+            // Скидання полів
+            document.getElementById('srvPlate').value = '';
+            document.getElementById('srvOrder').value = '';
+            document.getElementById('srvCustomBrand').value = '';
+        }
+
+        function executeOrderCreation({ plate, orderNo, brand, type, postId, timeStr, isImmediate }) {
+            if (!plate) {
+                plate = '№ N/O';
+            }
+
+            const parsed = parseOrderType(orderNo);
+            const postObj = adminPosts.find(p => p.id == postId) || { name: 'Пост 1', worker: 'Іванов' };
+
+            // Вираховуємо час запису
+            const now = getSystemTime();
+            let scheduledTime = new Date();
+            if (isImmediate) {
+                scheduledTime = now;
+            } else {
+                const parts = timeStr.split(':');
+                scheduledTime.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+            }
+
+            const newOrder = {
+                id: Date.now(),
+                plate,
+                orderNo,
+                brand,
+                type,
+                postName: postObj.name,
+                postWorker: postObj.worker,
+                scheduledTime,
+                isImmediate,
+                status: isImmediate ? 'В роботі' : 'Очікує', // Очікує, В роботі, Завершено (на складі), Готово
+                warehouseStatus: 'Черга', // Черга, Збирається, Завершити, Завершено
+                warehouseTimeout: null,
+                workStartedTime: isImmediate ? now : null,
+                workDuration: parsed.time, // хв
+                parsedDesc: parsed.desc,
+                extraTimeAdded: 0, // додаткові хвилини від механіків
+                delayReported: false, // чи вискакував банер про затримку на 10хв
+                transitTimer: null, // таймер прямування (3 хв)
+                transitStarted: null,
+                clientInformedAboutTransit: false,
+                mechanicFinishedTime: null
+            };
+
+            orders.push(newOrder);
+            showNotification('Нове замовлення', `Транспорт ${brand} (${plate}) зареєстровано.`, 'cupra');
+            
+            // Якщо створено "В роботу" одразу, відправляємо сповіщення складу
+            if (newOrder.status === 'В роботі') {
+                triggerWarehouseNotification(newOrder);
+            }
+
+            renderAll();
+        }
+
+        // --- МОБІЛЬНИЙ КРОКОВИЙ ЗАПИС ---
+        let currentMobStep = 1;
+        function nextMobileStep(step) {
+            document.getElementById(`mobStep${currentMobStep}`).classList.add('hidden');
+            document.getElementById(`mobStep${step}`).classList.remove('hidden');
+            document.getElementById('mobileStepIndicator').innerText = `Крок ${step} з 4`;
+            currentMobStep = step;
+        }
+
+        function prevMobileStep(step) {
+            document.getElementById(`mobStep${currentMobStep}`).classList.add('hidden');
+            document.getElementById(`mobStep${step}`).classList.remove('hidden');
+            document.getElementById('mobileStepIndicator').innerText = `Крок ${step} з 4`;
+            currentMobStep = step;
+        }
+
+        function finishMobileRegistration() {
+            let plate = document.getElementById('mobPlate').value.trim().toUpperCase();
+            let orderNo = document.getElementById('mobOrder').value.trim();
+            let brand = document.getElementById('mobBrand').value;
+            let type = document.getElementById('mobType').value;
+            let postId = document.getElementById('mobPost').value;
+
+            if (!orderNo) {
+                alert('Поле номеру замовлення обов\'язкове!');
+                return;
+            }
+
+            if (brand === 'Інша') {
+                brand = document.getElementById('mobCustomBrand').value.trim() || 'Інше авто';
+            }
+
+            const now = getSystemTime();
+            const timeStr = `${now.getHours()}:${now.getMinutes()}`;
+
+            executeOrderCreation({
+                plate,
+                orderNo,
+                brand,
+                type,
+                postId,
+                timeStr,
+                isImmediate: true // Мобільний запис заїжджає на зараз
+            });
+
+            // Очищення мобільних полів та повернення
+            document.getElementById('mobPlate').value = '';
+            document.getElementById('mobOrder').value = '';
+            document.getElementById('mobCustomBrand').value = '';
+            nextMobileStep(1);
+            goToMainMenu();
+        }
+
+        // --- СПОВІЩЕННЯ ТА БАНЕРИ (ВЕРХНІ ТОСТИ) ---
+        function showNotification(title, text, type = 'cupra') {
+            const area = document.getElementById('notificationArea');
+            const toast = document.createElement('div');
+            toast.className = 'oneui-card p-4 animate-slide-in pointer-events-auto border-l-4 ' + 
+                (type === 'cupra' ? 'border-[#D1A153]' : 'border-red-500') + ' text-white';
+            
+            toast.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h4 class="font-bold text-sm text-[#D1A153]">${title}</h4>
+                        <p class="text-xs text-neutral-300 mt-1">${text}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-neutral-500 hover:text-white text-xs ml-2">✕</button>
+                </div>
+            `;
+            area.appendChild(toast);
+            playBellSound();
+
+            setTimeout(() => {
+                toast.remove();
+            }, 10000); // Банери зникають за 10 секунд
+        }
+
+        function triggerWarehouseNotification(order) {
+            // Банер для складу на 10 сек
+            showNotification('СКЛАД: Нове замовлення', `Замовлення: ${order.orderNo} | Держ. Номер: ${order.plate} - ${order.parsedDesc}`, 'cupra');
+        }
+
+        // --- ДИНАМІЧНИЙ РУШІЙ ТАЙМЕРІВ (1 СЕКУНДА) ---
+        function startSystemEngine() {
+            setInterval(() => {
+                const now = getSystemTime();
+
+                orders.forEach(order => {
+                    // 1. Логіка складу: якщо "Завершено", іде зворотний відлік 2 хв до видалення
+                    if (order.warehouseStatus === 'Завершено') {
+                        if (!order.warehouseTimeout) {
+                            order.warehouseTimeout = Date.now() + 120000; // 2 хв
+                        }
+                        if (Date.now() >= order.warehouseTimeout) {
+                            // Пропадає тільки зі Складу, не з Сервісу
+                            order.warehouseStatus = 'ПрихованоСклад';
+                        }
+                    }
+
+                    // 2. Логіка очікування (запізнення)
+                    if (order.status === 'Очікує') {
+                        const diffMs = order.scheduledTime - now;
+                        if (diffMs < 0) {
+                            // Авто запізнюється
+                            order.isLate = true;
+                            order.lateMinutes = Math.floor(Math.abs(diffMs) / 60000);
+                        } else {
+                            order.isLate = false;
+                            order.waitMinutes = Math.floor(diffMs / 60000);
+                        }
+                    }
+
+                    // 3. Логіка прямування на ділянку (3 хвилини після старту статусу "В роботі")
+                    if (order.status === 'В роботі' && order.workStartedTime) {
+                        const elapsedSec = Math.floor((now - order.workStartedTime) / 1000);
+                        
+                        if (elapsedSec < 180) { // 3 хвилини прямування
+                            order.onPostWay = true;
+                            order.wayTimeRemaining = 180 - elapsedSec;
+                        } else {
+                            order.onPostWay = false;
+                            
+                            // Запускається основний таймер ремонту
+                            const repairElapsedMin = Math.floor((now - (order.workStartedTime.getTime() + 180000)) / 60000);
+                            const totalAllowedTime = order.workDuration + order.extraTimeAdded;
+                            const remaining = totalAllowedTime - repairElapsedMin;
+
+                            if (remaining < 0) {
+                                order.isOverdue = true;
+                                order.overdueMinutes = Math.abs(remaining);
+
+                                // Автоматичний банер затримки на 10 хвилин (якщо ще не додавався авто-банер)
+                                if (!order.delayReported) {
+                                    order.extraTimeAdded += 10;
+                                    order.delayReported = true;
+                                    showNotification('ІНФО.М - Затримка', `Нам потрібно більше часу на 10 хв по автомобілю ${order.brand} (${order.plate}). Дякуємо за терпіння!`, 'cupra');
+                                }
+                            } else {
+                                order.isOverdue = false;
+                                order.repairMinutesRemaining = remaining;
+                            }
+                        }
+                    }
+
+                    // 4. Таймер у механіка після натискання "Завершено ремонт" (3 хв до видалення)
+                    if (order.status === 'РемонтЗавершено' && order.mechanicFinishedTime) {
+                        const elapsedSec = Math.floor((now - order.mechanicFinishedTime) / 1000);
+                        order.mechanicTimerSec = 180 - elapsedSec;
+                        if (elapsedSec >= 180) {
+                            // Видаляємо авто з системи повністю за таймером, якщо сервіс не натиснув кнопку раніше
+                            orders = orders.filter(o => o.id !== order.id);
+                        }
+                    }
+                });
+
+                renderAll();
+            }, 1000);
+        }
+
+        // --- ФУНКЦІЇ ДІЙ (СТАТУСИ) ---
+        function moveOrderToWork(id) {
+            const order = orders.find(o => o.id === id);
+            if (order) {
+                order.status = 'В роботі';
+                order.workStartedTime = getSystemTime();
+                triggerWarehouseNotification(order);
+                showNotification('Старт робіт', `Автомобіль ${order.brand} (${order.plate}) взято в роботу.`, 'cupra');
+                renderAll();
+            }
+        }
+
+        function declineOrder(id) {
+            const modal = document.getElementById('declineModal');
+            modal.classList.remove('hidden');
+
+            document.getElementById('declineConfirm').onclick = () => {
+                orders = orders.filter(o => o.id !== id);
+                modal.classList.add('hidden');
+                renderAll();
+            };
+            document.getElementById('declineCancel').onclick = () => {
+                modal.classList.add('hidden');
+            };
+        }
+
+        function advanceWarehouse(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+
+            if (order.warehouseStatus === 'Черга') {
+                order.warehouseStatus = 'Збирається';
+            } else if (order.warehouseStatus === 'Збирається') {
+                order.warehouseStatus = 'Завершити';
+            } else if (order.warehouseStatus === 'Завершити') {
+                order.warehouseStatus = 'Завершено';
+                showNotification('Склад готовий', `Запчастини для ${order.plate} зібрані.`, 'cupra');
+            }
+            renderAll();
+        }
+
+        // Механік завершив ремонт
+        function finishRepairMechanic(id) {
+            const order = orders.find(o => o.id === id);
+            if (order) {
+                order.status = 'РемонтЗавершено';
+                order.mechanicFinishedTime = getSystemTime();
+                
+                // Клієнтський банер на 20 сек
+                showNotification('ІНФО.М: ГОТОВНІСТЬ', `Ремонт автомобіля ${order.brand} (${order.plate}) завершено. Передаємо авто на видачу через 3 хв!`, 'cupra');
+                
+                renderAll();
+            }
+        }
+
+        // Сервіс здійснює фінальну видачу
+        function deliverToClient(id) {
+            showNotification('Видача авто', 'Автомобіль успішно видано клієнту!', 'cupra');
+            orders = orders.filter(o => o.id !== id);
+            renderAll();
+        }
+
+        // Редагування поста у механіка
+        let activeEditOrderId = null;
+        function openEditPostModal(orderId) {
+            activeEditOrderId = orderId;
+            document.getElementById('editPostModal').classList.remove('hidden');
+        }
+        function closeEditPostModal() {
+            document.getElementById('editPostModal').classList.add('hidden');
+        }
+        document.getElementById('editPostConfirm').onclick = () => {
+            const selectVal = document.getElementById('editPostSelector').value;
+            const postObj = adminPosts.find(p => p.id == selectVal);
+            const order = orders.find(o => o.id === activeEditOrderId);
+            if (order && postObj) {
+                order.postName = postObj.name;
+                order.postWorker = postObj.worker;
+                showNotification('Механік змінений', `Заявку переведено на ${postObj.name} (${postObj.worker})`);
+            }
+            closeEditPostModal();
+            renderAll();
+        };
+
+        // Внесення додаткового часу механіком
+        let activeExtraTimeOrderId = null;
+        function openExtraTimeModal(orderId) {
+            activeExtraTimeOrderId = orderId;
+            document.getElementById('extraTimeModal').classList.remove('hidden');
+        }
+        function closeExtraTimeModal() {
+            document.getElementById('extraTimeModal').classList.add('hidden');
+        }
+        document.getElementById('extraTimeConfirm').onclick = () => {
+            const val = document.getElementById('extraTimeValue').value.trim();
+            const additionalMin = parseMinutes(val);
+            const order = orders.find(o => o.id === activeExtraTimeOrderId);
+            if (order) {
+                order.extraTimeAdded += additionalMin;
+                // Клієнтське табло банер на 20 сек
+                showNotification('ІНФО.М - Корекція часу', `За автомобілем ${order.brand} (${order.plate}) змінено час видачі. Потрібно додатково: ${formatMinutes(additionalMin)}.`, 'cupra');
+            }
+            closeExtraTimeModal();
+            document.getElementById('extraTimeValue').value = '';
+            renderAll();
+        };
+
+        // --- ОДНОРАЗОВІ СПОВІЩЕННЯ (БАНЕРИ) З СЕРВІСУ ---
+        let currentCustomMsgType = 'all';
+        function openCustomMessageModal(type) {
+            currentCustomMsgType = type;
+            const title = type === 'monitor' ? 'Сповістити Інфо-Монітор' : 'Сповістити інші відділи (всі)';
+            document.getElementById('msgModalTitle').innerText = title;
+            document.getElementById('customMessageModal').classList.remove('hidden');
+        }
+        function closeCustomMessageModal() {
+            document.getElementById('customMessageModal').classList.add('hidden');
+            document.getElementById('customMsgText').value = '';
+        }
+        document.getElementById('customMsgSend').onclick = () => {
+            const text = document.getElementById('customMsgText').value.trim();
+            if (!text) return;
+
+            if (currentCustomMsgType === 'monitor') {
+                // Вимагає підтвердження
+                if (confirm('Ви впевнені, що хочете вивести це повідомлення на Інформаційний Монітор?')) {
+                    showNotification('ПОВІДОМЛЕННЯ КЛІЄНТАМ', text, 'cupra');
+                }
+            } else {
+                showNotification('Важливе оголошення', text, 'cupra');
+            }
+            closeCustomMessageModal();
+        };
+
+        // --- ВЕЛИКИЙ РЕНДЕР ВСІХ СТОРІНОК (СИНХРОНІЗАЦІЯ) ---
+        function renderAll() {
+            // Оновлення баджів лічильників
+            const inWorkCount = orders.filter(o => o.status === 'В роботі').length;
+            const newWarehouseCount = orders.filter(o => o.status === 'В роботі' && o.warehouseStatus !== 'ПрихованоСклад').length;
+            const monitorActiveCount = orders.filter(o => o.status === 'В роботі' || o.status === 'РемонтЗавершено').length;
+
+            document.getElementById('badgeService').innerText = `В роботі: ${inWorkCount}`;
+            document.getElementById('badgeMechanics').innerText = `В роботі: ${inWorkCount}`;
+            document.getElementById('badgeWarehouse').innerText = `Заявок: ${newWarehouseCount}`;
+            document.getElementById('badgeMonitor').innerText = `Активно: ${monitorActiveCount}`;
+
+            renderServiceTab();
+            renderMechanicsTab();
+            renderWarehouseTab();
+            renderInfoMonitorTab();
+        }
+
+        // 1. Рендер Сервісу
+        function renderServiceTab() {
+            const queue = document.getElementById('serviceQueue');
+            queue.innerHTML = '';
+
+            if (orders.length === 0) {
+                queue.innerHTML = `<p class="text-neutral-500 text-sm text-center py-8">Немає зареєстрованих авто.</p>`;
+                return;
+            }
+
+            orders.forEach(o => {
+                let badgeHTML = '';
+                let timerHTML = '';
+                let actionsHTML = '';
+
+                // Колір статусу складу для приймальника
+                let whLabel = '';
+                if (o.warehouseStatus === 'Завершено' || o.warehouseStatus === 'ПрихованоСклад') {
+                    whLabel = `<span class="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-bold">Запчастини зібрані</span>`;
+                } else {
+                    whLabel = `<span class="bg-amber-600/10 text-amber-500 text-xs px-2.5 py-1 rounded-full font-medium">Склад: ${o.warehouseStatus}</span>`;
+                }
+
+                if (o.status === 'Очікує') {
+                    badgeHTML = `<span class="bg-[#D1A153]/20 text-[#D1A153] text-xs px-2.5 py-1 rounded-full font-bold">Очікує</span>`;
+                    
+                    if (o.isLate) {
+                        timerHTML = `<span class="text-red-500 font-semibold text-xs">Запізнюється на: ${formatMinutes(o.lateMinutes)}</span>`;
+                    } else {
+                        timerHTML = `<span class="text-neutral-400 text-xs">Прибуття через: ${o.waitMinutes} хв</span>`;
+                    }
+
+                    actionsHTML = `
+                        <button onclick="moveOrderToWork(${o.id})" class="oneui-btn bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 font-bold">В роботу</button>
+                        <button onclick="declineOrder(${o.id})" class="oneui-btn bg-red-600/20 text-red-500 hover:bg-red-600/30 text-xs px-3 py-1.5 font-bold">Відмова</button>
+                    `;
+                } else if (o.status === 'В роботі') {
+                    badgeHTML = `<span class="bg-blue-600/20 text-blue-400 text-xs px-2.5 py-1 rounded-full font-bold">В роботі</span>`;
+                    
+                    if (o.onPostWay) {
+                        timerHTML = `<span class="text-amber-500 font-semibold text-xs">Прямує на пост (3 хв): ${o.wayTimeRemaining}с</span>`;
+                    } else {
+                        if (o.isOverdue) {
+                            timerHTML = `<span class="text-red-500 font-bold text-xs">Затримка: +${formatMinutes(o.overdueMinutes)}</span>`;
+                        } else {
+                            timerHTML = `<span class="text-emerald-400 text-xs">Буде готово за: ${o.repairMinutesRemaining} хв</span>`;
+                        }
+                    }
+
+                    actionsHTML = `
+                        <button onclick="finishRepairMechanic(${o.id})" class="oneui-btn bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 font-bold">Завершити</button>
+                    `;
+                } else if (o.status === 'РемонтЗавершено') {
+                    badgeHTML = `<span class="bg-purple-600/20 text-purple-400 text-xs px-2.5 py-1 rounded-full font-bold">Готово (Мийка/Перевірка)</span>`;
+                    timerHTML = `<span class="text-purple-400 text-xs">Таймер видачі: ${o.mechanicTimerSec}с</span>`;
+                    actionsHTML = `
+                        <button onclick="deliverToClient(${o.id})" class="oneui-btn bg-amber-500 text-neutral-950 text-xs px-4 py-1.5 font-bold">Видати клієнту</button>
+                    `;
+                }
+
+                queue.innerHTML += `
+                    <div class="oneui-card p-4 bg-neutral-900/40 border border-neutral-800 flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-white text-base">${o.plate}</span>
+                                <span class="text-xs text-neutral-400 font-bold bg-neutral-800 px-2 py-0.5 rounded">${o.brand}</span>
+                                <span class="text-xs text-neutral-500">Пост: ${o.postName}</span>
+                            </div>
+                            <div class="text-xs text-neutral-400 mt-1">
+                                Наряд: <strong class="text-neutral-200">${o.orderNo}</strong> (${o.parsedDesc}) | ${o.type}
+                            </div>
+                            <div class="flex items-center space-x-2 mt-2">
+                                ${whLabel}
+                                ${timerHTML}
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 self-end md:self-center">
+                            ${actionsHTML}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 2. Рендер Запису Механіків
+        function renderMechanicsTab() {
+            const tbody = document.getElementById('mechanicsTableBody');
+            tbody.innerHTML = '';
+
+            const relevantOrders = orders.filter(o => o.status === 'В роботі' || o.status === 'РемонтЗавершено' || (o.status === 'Очікує' && o.waitMinutes <= 60));
+
+            if (relevantOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-neutral-500 text-sm">У ремзоні немає активних завдань.</td></tr>`;
+                return;
+            }
+
+            relevantOrders.forEach(o => {
+                let statusText = '';
+                let actionBtn = '';
+
+                if (o.status === 'Очікує') {
+                    statusText = `<span class="text-neutral-400">Авто очікується (${o.isLate ? 'Запізнення' : o.waitMinutes + ' хв'})</span>`;
+                } else if (o.status === 'В роботі') {
+                    if (o.onPostWay) {
+                        statusText = `<span class="text-amber-500 font-medium">Прямує на ділянку (${o.wayTimeRemaining}с)</span>`;
+                    } else {
+                        statusText = o.isOverdue 
+                            ? `<span class="text-red-500 font-bold">Затримується: ${formatMinutes(o.overdueMinutes)}</span>` 
+                            : `<span class="text-emerald-400">Авто буде завершено через ${o.repairMinutesRemaining} хв</span>`;
+                    }
+                    actionBtn = `
+                        <button onclick="openExtraTimeModal(${o.id})" class="oneui-btn bg-neutral-800 text-neutral-200 text-xs px-2.5 py-1.5 mr-2">Додати час</button>
+                        <button onclick="finishRepairMechanic(${o.id})" class="oneui-btn bg-emerald-600 text-white text-xs px-3 py-1.5 font-bold">Завершити</button>
+                    `;
+                } else if (o.status === 'РемонтЗавершено') {
+                    statusText = `<span class="text-purple-400 font-semibold">Готово. До видачі: ${o.mechanicTimerSec}с</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-neutral-800/30">
+                        <td class="py-3.5">
+                            <div class="font-bold text-white">${o.plate}</div>
+                            <div class="text-xs text-neutral-400">${o.brand}</div>
+                        </td>
+                        <td class="py-3.5">
+                            <div class="text-sm font-semibold text-neutral-200">${o.orderNo}</div>
+                            <div class="text-xs text-neutral-400">${o.parsedDesc}</div>
+                        </td>
+                        <td class="py-3.5">
+                            <div class="text-sm font-medium text-neutral-200">${o.postName}</div>
+                            <div class="text-xs text-neutral-500">${o.postWorker}</div>
+                        </td>
+                        <td class="py-3.5 text-xs">
+                            ${statusText}
+                        </td>
+                        <td class="py-3.5 text-right">
+                            <div class="flex justify-end items-center">
+                                <button onclick="openEditPostModal(${o.id})" class="oneui-btn bg-neutral-900 border border-neutral-700 text-xs px-2 py-1 mr-2 text-neutral-300">Змінити пост</button>
+                                ${actionBtn}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 3. Рендер Складу
+        function renderWarehouseTab() {
+            const list = document.getElementById('warehouseList');
+            list.innerHTML = '';
+
+            const whOrders = orders.filter(o => o.status === 'В роботі' && o.warehouseStatus !== 'ПрихованоСклад');
+
+            if (whOrders.length === 0) {
+                list.innerHTML = `<p class="text-neutral-500 text-sm text-center py-8">Замовлень на комплектування запчастин немає.</p>`;
+                return;
+            }
+
+            whOrders.forEach(o => {
+                let btnText = 'Почати збір';
+                let btnColor = 'bg-[#D1A153] text-neutral-950';
+                
+                if (o.warehouseStatus === 'Збирається') {
+                    btnText = 'Завершити збір';
+                    btnColor = 'bg-amber-600 text-white';
+                } else if (o.warehouseStatus === 'Завершити') {
+                    btnText = 'Завершено (Готово)';
+                    btnColor = 'bg-emerald-600 text-white';
+                } else if (o.warehouseStatus === 'Завершено') {
+                    btnText = 'Зібрано';
+                    btnColor = 'bg-neutral-800 text-neutral-500 cursor-not-allowed';
+                }
+
+                list.innerHTML += `
+                    <div class="oneui-card p-4 flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-[#D1A153] text-lg">${o.plate}</span>
+                                <span class="text-xs bg-neutral-800 text-white px-2 py-0.5 rounded">${o.brand}</span>
+                            </div>
+                            <p class="text-xs text-neutral-400 mt-1">
+                                Наряд: <strong>${o.orderNo}</strong> | Тип: ${o.parsedDesc}
+                            </p>
+                            <p class="text-xs text-neutral-500 mt-1">Пост обслуговування: ${o.postName}</p>
+                        </div>
+                        <div>
+                            <button onclick="advanceWarehouse(${o.id})" ${o.warehouseStatus === 'Завершено' ? 'disabled' : ''} class="oneui-btn ${btnColor} font-bold text-xs px-4 py-2.5">
+                                ${btnText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 4. Рендер Клієнтського Інфо-Монітора
+        function renderInfoMonitorTab() {
+            const wList = document.getElementById('monitorWaitingList');
+            const aList = document.getElementById('monitorActiveList');
+
+            wList.innerHTML = '';
+            aList.innerHTML = '';
+
+            const waiting = orders.filter(o => o.status === 'Очікує');
+            const active = orders.filter(o => o.status === 'В роботі' || o.status === 'РемонтЗавершено');
+
+            // Очікування
+            if (waiting.length === 0) {
+                wList.innerHTML = `<p class="text-neutral-500 text-xs py-4">Немає запланованих заїздів найближчим часом.</p>`;
+            } else {
+                waiting.forEach(o => {
+                    let cardStyle = "border-l-4 border-amber-500";
+                    let stateLabel = `<span class="text-amber-500 font-bold">Очікується</span>`;
+                    let timeText = `Заїзд за розкладом: ${o.scheduledTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+
+                    if (o.isLate) {
+                        cardStyle = "border-l-4 border-red-500 bg-red-950/10";
+                        stateLabel = `<span class="text-red-500 font-bold">Авто запізнюється</span>`;
+                        timeText = `Затримка прибуття: ${formatMinutes(o.lateMinutes)}`;
+                    }
+
+                    wList.innerHTML += `
+                        <div class="bg-neutral-900/80 p-4 rounded-2xl ${cardStyle} flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-white text-base">${o.plate}</h4>
+                                <p class="text-xs text-neutral-400">${o.brand} | ${o.parsedDesc}</p>
+                                <p class="text-xs text-neutral-500 mt-1">${timeText}</p>
+                            </div>
+                            <div class="text-right text-xs">
+                                ${stateLabel}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Активні на постах
+            if (active.length === 0) {
+                aList.innerHTML = `<p class="text-neutral-500 text-xs py-4">Наразі обслуговування на постах не здійснюється.</p>`;
+            } else {
+                active.forEach(o => {
+                    let textStatus = '';
+                    let colorClass = 'text-blue-400';
+
+                    if (o.status === 'В роботі') {
+                        if (o.onPostWay) {
+                            textStatus = 'Прямує на обслуговування';
+                            colorClass = 'text-amber-500 animate-pulse';
+                        } else {
+                            const estHours = o.scheduledTime.getHours();
+                            const estMin = o.scheduledTime.getMinutes() + o.workDuration + o.extraTimeAdded;
+                            const estDate = new Date(o.scheduledTime.getTime());
+                            estDate.setMinutes(estDate.getMinutes() + o.workDuration + o.extraTimeAdded);
+                            const planTimeStr = estDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                            textStatus = o.isOverdue 
+                                ? `В роботі (Корекція часу, затримка)` 
+                                : `Планова видача: ${planTimeStr}`;
+                            colorClass = o.isOverdue ? 'text-red-400' : 'text-emerald-400';
+                        }
+                    } else if (o.status === 'РемонтЗавершено') {
+                        textStatus = 'Ремонт завершено. Передаємо клієнту!';
+                        colorClass = 'text-purple-400 font-bold';
+                    }
+
+                    aList.innerHTML += `
+                        <div class="bg-neutral-900/80 p-4 rounded-2xl border border-neutral-800 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-white text-base">${o.plate}</h4>
+                                <p class="text-xs text-neutral-400">${o.brand} | Пост: ${o.postName}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs ${colorClass}">${textStatus}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // --- НАВІГАЦІЯ СИСТЕМИ ---
+        function switchTab(tabName) {
+            // Ховаємо меню
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('backBtn').classList.remove('hidden');
+
+            // Ховаємо всі таби
+            document.getElementById('tabService').classList.add('hidden');
+            document.getElementById('tabMechanics').classList.add('hidden');
+            document.getElementById('tabWarehouse').classList.add('hidden');
+            document.getElementById('tabAdmin').classList.add('hidden');
+            document.getElementById('tabMobileRegistration').classList.add('hidden');
+            document.getElementById('tabInfoMonitor').classList.add('hidden');
+
+            // Показуємо вибраний
+            const activeTab = 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+            document.getElementById(activeTab).classList.remove('hidden');
+
+            renderAll();
+        }
+
+        function goToMainMenu() {
+            document.getElementById('mainMenu').classList.remove('hidden');
+            document.getElementById('backBtn').classList.add('hidden');
+
+            document.getElementById('tabService').classList.add('hidden');
+            document.getElementById('tabMechanics').classList.add('hidden');
+            document.getElementById('tabWarehouse').classList.add('hidden');
+            document.getElementById('tabAdmin').classList.add('hidden');
+            document.getElementById('tabMobileRegistration').classList.add('hidden');
+            document.getElementById('tabInfoMonitor').classList.add('hidden');
+        }
+
+        // Старт додатку
+        window.onload = initData;
+    </script>
+</body>
+</html>
