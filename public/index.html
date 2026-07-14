@@ -1,0 +1,1487 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUPRA SERVICE SYSTEM - One UI 8.5</title>
+    <!-- Tailwind CSS for speed and rich styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Socket.io client -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Custom styling to replicate physical look on screenshots: glassmorphism, copper accents, and neon glows -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0B0E11; /* Deep rich space-dark background */
+            color: #E2E8F0;
+            overflow-x: hidden;
+        }
+
+        /* Cupra Theme Color variables */
+        :root {
+            --cupra-copper: #D17A3D; /* Signature Cupra copper */
+            --cupra-copper-glow: rgba(209, 122, 61, 0.15);
+            --oneui-blue: #1A73E8;
+            --oneui-green: #34A853;
+            --oneui-red: #EA4335;
+        }
+
+        /* Glassmorphic Cards resembling the physical devices in screenshots */
+        .glass-panel {
+            background: rgba(20, 24, 29, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .copper-glow-hover:hover {
+            box-shadow: 0 0 25px var(--cupra-copper-glow);
+            border-color: var(--cupra-copper);
+        }
+
+        /* Rounded Buttons (One UI shape) */
+        .oneui-btn {
+            border-radius: 20px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .oneui-card {
+            border-radius: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Scrollbars in One UI style */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--cupra-copper);
+        }
+
+        /* CSS Keyframe Animations for notifications and banners */
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100%) translateX(-50%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) translateX(-50%);
+                opacity: 1;
+            }
+        }
+        .animate-banner {
+            animation: slideInUp 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Notification Sound (Bell) -->
+    <audio id="bellSound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+
+    <!-- Global App Wrapper -->
+    <div id="app" class="flex-grow flex flex-col p-4 md:p-6 max-w-[1600px] mx-auto w-full">
+        
+        <!-- TOP NAVIGATION HEADER BAR (Always present) -->
+        <header class="flex flex-wrap items-center justify-between mb-6 pb-4 border-b border-gray-800/60">
+            <div class="flex items-center gap-3">
+                <!-- Back Button (Shown when not in Home View) -->
+                <button onclick="goHome()" id="backBtn" class="hidden oneui-btn bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 text-sm flex items-center gap-2">
+                    <span class="text-base">←</span> Назад
+                </button>
+                <div class="flex items-center gap-2">
+                    <!-- Cupra Logo (Triangle-like symbol representation) -->
+                    <span class="text-2xl font-extrabold tracking-wider" style="color: var(--cupra-copper)">
+                        ◈ CUPRA
+                    </span>
+                    <span class="text-xs font-semibold uppercase tracking-widest text-gray-400 border-l border-gray-700 pl-2">
+                        Service Київ
+                    </span>
+                </div>
+            </div>
+
+            <!-- Current Real Time & Status Indicators -->
+            <div class="flex items-center gap-6">
+                <div class="text-right">
+                    <div id="headerTime" class="text-xl md:text-2xl font-mono font-bold tracking-widest text-white">18:42:28</div>
+                    <div id="headerDate" class="text-xs text-gray-400">12 липня 2026, субота</div>
+                </div>
+                <!-- Connected Dot -->
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 text-xs">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Сервер підключено
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT VIEWS -->
+        <main class="flex-grow">
+            
+            <!-- 1. HOME SCREEN (GRID MENU) -->
+            <div id="view-home" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+                <!-- Weather Widget as top-row item -->
+                <div class="oneui-card glass-panel p-6 border-l-4 border-sky-400 flex items-center justify-between col-span-1 md:col-span-2 lg:col-span-3">
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl">☀️</div>
+                        <div>
+                            <div class="text-3xl font-bold text-white">22°</div>
+                            <div class="text-sm text-gray-400">Сонячно • Шевченківський район</div>
+                        </div>
+                    </div>
+                    <div class="text-right hidden sm:block">
+                        <span class="text-sm text-sky-400 font-medium">Сьогодні працюємо без затримок</span>
+                    </div>
+                </div>
+
+                <!-- 1. SERVICE CARD -->
+                <div onclick="switchView('service')" class="oneui-card glass-panel p-6 copper-glow-hover cursor-pointer relative group flex flex-col justify-between h-48">
+                    <div class="flex justify-between items-start">
+                        <div class="p-3 bg-amber-500/10 rounded-2xl text-amber-500 text-3xl">⚙️</div>
+                        <span id="badge-service" class="bg-amber-500 text-black text-xs font-extrabold px-3 py-1 rounded-full">0 в роботі</span>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white group-hover:text-amber-500 transition-colors">СЕРВІС</h2>
+                        <p class="text-xs text-gray-400">Приймання автомобілів та керування замовленнями</p>
+                    </div>
+                </div>
+
+                <!-- 2. WAREHOUSE CARD -->
+                <div onclick="switchView('warehouse')" class="oneui-card glass-panel p-6 copper-glow-hover cursor-pointer relative group flex flex-col justify-between h-48">
+                    <div class="flex justify-between items-start">
+                        <div class="p-3 bg-blue-500/10 rounded-2xl text-blue-500 text-3xl">📦</div>
+                        <span id="badge-warehouse" class="bg-blue-500 text-white text-xs font-extrabold px-3 py-1 rounded-full">0 нових</span>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white group-hover:text-blue-500 transition-colors">СКЛАД</h2>
+                        <p class="text-xs text-gray-400">Замовлення, комплектація запчастин та збирання</p>
+                    </div>
+                </div>
+
+                <!-- 3. MECHANICS MONITOR CARD -->
+                <div onclick="switchView('mechanics')" class="oneui-card glass-panel p-6 copper-glow-hover cursor-pointer relative group flex flex-col justify-between h-48">
+                    <div class="flex justify-between items-start">
+                        <div class="p-3 bg-emerald-500/10 rounded-2xl text-emerald-500 text-3xl">🛠️</div>
+                        <span id="badge-mechanics" class="bg-emerald-500 text-white text-xs font-extrabold px-3 py-1 rounded-full">0 активних</span>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white group-hover:text-emerald-500 transition-colors">МЕХАНІКИ</h2>
+                        <p class="text-xs text-gray-400">Статуси ремонтних постів та розподіл робіт</p>
+                    </div>
+                </div>
+
+                <!-- 4. INFO MONITOR CARD -->
+                <div onclick="switchView('infomonitor')" class="oneui-card glass-panel p-6 copper-glow-hover cursor-pointer relative group flex flex-col justify-between h-48">
+                    <div class="flex justify-between items-start">
+                        <div class="p-3 bg-purple-500/10 rounded-2xl text-purple-500 text-3xl">🖥️</div>
+                        <span id="badge-infomonitor" class="bg-purple-500 text-white text-xs font-extrabold px-3 py-1 rounded-full">активно</span>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white group-hover:text-purple-500 transition-colors">ІНФО МОНІТОР</h2>
+                        <p class="text-xs text-gray-400">Клієнтське табло очікування та планового виїзду</p>
+                    </div>
+                </div>
+
+                <!-- 5. ADMIN CARD -->
+                <div onclick="switchView('admin')" class="oneui-card glass-panel p-6 copper-glow-hover cursor-pointer relative group flex flex-col justify-between h-48">
+                    <div class="flex justify-between items-start">
+                        <div class="p-3 bg-red-500/10 rounded-2xl text-red-500 text-3xl">🛡️</div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white group-hover:text-red-500 transition-colors">АДМІНІСТРАТОР</h2>
+                        <p class="text-xs text-gray-400">Параметри нарядів, ремонтних постів та майстрів</p>
+                    </div>
+                </div>
+
+                <!-- 6. MOBILE APP CARD -->
+                <div onclick="switchView('mobile')" class="oneui-card glass-panel p-6 copper-glow-hover cursor-pointer relative group flex flex-col justify-between h-48 border border-dashed border-gray-700">
+                    <div class="flex justify-between items-start">
+                        <div class="p-3 bg-teal-500/10 rounded-2xl text-teal-500 text-3xl">📱</div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white group-hover:text-teal-500 transition-colors">МОБІЛЬНИЙ ЗАПИС</h2>
+                        <p class="text-xs text-gray-400 font-semibold text-teal-400">Швидкий запуск із телефону</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. SERVICE VIEW (Split-Screen) -->
+            <div id="view-service" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Left panel: Form booking -->
+                <div class="lg:col-span-5 glass-panel oneui-card p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-white">Новий запис</h2>
+                        <span class="text-xs uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full">Офіційний запис</span>
+                    </div>
+
+                    <form id="bookingForm" onsubmit="event.preventDefault();" class="space-y-4">
+                        <!-- State Number -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Державний номер</label>
+                            <input type="text" id="carPlate" oninput="this.value = this.value.toUpperCase();" placeholder="AA1234BB" class="w-full bg-gray-900/60 border border-gray-800 rounded-2xl px-4 py-3 text-white text-lg font-mono font-bold focus:outline-none focus:border-amber-500 transition-colors">
+                        </div>
+
+                        <!-- Order Code (TOZ0 etc.) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Номер наряду (Код)</label>
+                            <input type="text" id="orderCode" placeholder="Введіть код замовлення" class="w-full bg-gray-900/60 border border-gray-800 rounded-2xl px-4 py-3 text-white text-lg font-mono font-bold focus:outline-none focus:border-amber-500 transition-colors" required>
+                        </div>
+
+                        <!-- Car Brand Grid Selector -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Марка Автомобіля</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button type="button" onclick="selectBrand('seat&cupra')" class="brand-btn oneui-btn bg-amber-500 text-black border border-amber-500 font-bold py-2 text-xs">Cupra/Seat</button>
+                                <button type="button" onclick="selectBrand('audi')" class="brand-btn oneui-btn bg-gray-800 hover:bg-gray-700 font-semibold py-2 text-xs">Audi</button>
+                                <button type="button" onclick="selectBrand('vw')" class="brand-btn oneui-btn bg-gray-800 hover:bg-gray-700 font-semibold py-2 text-xs">VW</button>
+                                <button type="button" onclick="selectBrand('skoda')" class="brand-btn oneui-btn bg-gray-800 hover:bg-gray-700 font-semibold py-2 text-xs">Skoda</button>
+                                <button type="button" onclick="selectBrand('Porsche')" class="brand-btn oneui-btn bg-gray-800 hover:bg-gray-700 font-semibold py-2 text-xs">Porsche</button>
+                                <button type="button" onclick="selectBrand('other')" class="brand-btn oneui-btn bg-gray-800 hover:bg-gray-700 font-semibold py-2 text-xs">Інша</button>
+                            </div>
+                            <input type="text" id="customBrand" placeholder="Вкажіть марку авто" class="hidden w-full mt-2 bg-gray-900/60 border border-gray-800 rounded-2xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500">
+                        </div>
+
+                        <!-- Service Category Type -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Тип заїзду (Категорія)</label>
+                            <select id="serviceType" class="w-full bg-gray-900/60 border border-gray-800 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+                                <option value="Сервіс" selected>Сервіс</option>
+                                <option value="Кузовний цех">Кузовний цех</option>
+                                <option value="Шиномонтаж">Шиномонтаж</option>
+                                <option value="Детейлінг">Детейлінг</option>
+                                <option value="Мийка">Мийка</option>
+                                <option value="Малярний цех">Малярний цех</option>
+                            </select>
+                        </div>
+
+                        <!-- Appointment Time Grid & Selected Post -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Час запису</label>
+                                <select id="bookingTime" class="w-full bg-gray-900/60 border border-gray-800 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+                                    <option value="09:00">09:00</option>
+                                    <option value="09:30">09:30</option>
+                                    <option value="10:00">10:00</option>
+                                    <option value="10:30">10:30</option>
+                                    <option value="11:00">11:00</option>
+                                    <option value="11:30">11:30</option>
+                                    <option value="12:00">12:00</option>
+                                    <option value="12:30">12:30</option>
+                                    <option value="13:00">13:00</option>
+                                    <option value="13:30">13:30</option>
+                                    <option value="14:00">14:00</option>
+                                    <option value="14:30">14:30</option>
+                                    <option value="15:00">15:00</option>
+                                    <option value="15:30">15:30</option>
+                                    <option value="16:00">16:00</option>
+                                    <option value="16:30">16:30</option>
+                                    <option value="17:00">17:00</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Вибір Поста</label>
+                                <select id="assignedPost" class="w-full bg-gray-900/60 border border-gray-800 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+                                    <!-- Populated dynamically via current setting posts -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div class="grid grid-cols-2 gap-4 pt-4">
+                            <button onclick="createBooking(false)" class="oneui-btn bg-amber-500 hover:bg-amber-600 text-black font-extrabold py-3.5 transition-all text-sm uppercase tracking-wide">Записати</button>
+                            <button onclick="createBooking(true)" class="oneui-btn bg-sky-600 hover:bg-sky-500 text-white font-extrabold py-3.5 transition-all text-xs uppercase tracking-wide">В роботу без запису</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right panel: Active list / Appointments with timers -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="flex justify-between items-center bg-gray-900/40 p-4 rounded-3xl border border-gray-800">
+                        <h3 class="text-xl font-bold text-white">Черга на обслуговування</h3>
+                        <span class="text-xs text-gray-400 font-medium">Статуси оновлюються в реальному часі</span>
+                    </div>
+
+                    <div id="serviceQueueList" class="space-y-3 overflow-y-auto max-h-[580px]">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. WAREHOUSE VIEW -->
+            <div id="view-warehouse" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white">Черга Складу</h2>
+                        <p class="text-sm text-gray-400">Комплектування деталей для автомобілів в роботі</p>
+                    </div>
+                </div>
+
+                <div id="warehouseQueue" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards will be populated here -->
+                </div>
+            </div>
+
+            <!-- 4. MECHANICS VIEW -->
+            <div id="view-mechanics" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white">Монітор механіків (ЦНАП-Стиль)</h2>
+                        <p class="text-sm text-gray-400">Розподіл робочого часу та поточний стан по кожному посту</p>
+                    </div>
+                </div>
+
+                <div id="mechanicsQueue" class="space-y-4">
+                    <!-- Interactive posts layout -->
+                </div>
+            </div>
+
+            <!-- 5. INFO MONITOR VIEW (CLIENTS BROADCAST) -->
+            <div id="view-infomonitor" class="hidden space-y-6">
+                <!-- Massive header clock -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center bg-gray-900/50 p-6 rounded-3xl border border-gray-800/80">
+                    <div>
+                        <h2 class="text-3xl font-black uppercase text-amber-500 tracking-wider">Клієнтське табло</h2>
+                        <p class="text-sm text-gray-400">Будь ласка, слідкуйте за статусом Вашого автомобіля</p>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-6xl font-mono font-bold text-white" id="infomonitorTime">18:42:28</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm uppercase text-gray-500 block font-semibold">Канал зв'язку</span>
+                        <span class="text-xl text-emerald-400 font-bold">СЕРВІС КИЇВ • АКТИВНО</span>
+                    </div>
+                </div>
+
+                <div id="infomonitorRows" class="space-y-4">
+                    <!-- Live full-width progress rows -->
+                </div>
+            </div>
+
+            <!-- 6. ADMIN VIEW -->
+            <div id="view-admin" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white">Адміністративна панель</h2>
+                        <p class="text-sm text-gray-400">Налаштування кодів нарядів, робочого часу та ремонтних постів</p>
+                    </div>
+                    <button onclick="saveAdminSettings()" class="oneui-btn bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold px-6 py-3 text-sm">Зберегти налаштування</button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Left block: Naryads Table -->
+                    <div class="glass-panel oneui-card p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <span>📋</span> Таблиця розпізнавання нарядів (3х10)
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-xs uppercase bg-gray-900/80 text-gray-400">
+                                    <tr>
+                                        <th class="p-3">Символ (Код)</th>
+                                        <th class="p-3">Опис робіт</th>
+                                        <th class="p-3">Час (хв або ГГ:ХХ)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminNaryadTable" class="divide-y divide-gray-800">
+                                    <!-- 10 Rows will be generated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right block: Active Posts and Mechanics -->
+                    <div class="glass-panel oneui-card p-6">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <span>⚙️</span> Ремонтні Пости та механіки (7 Постів)
+                        </h3>
+                        <div id="adminPostsList" class="space-y-3">
+                            <!-- 7 Rows dynamically created with checkbox + PIP field -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. MOBILE WIZARD VIEW -->
+            <div id="view-mobile" class="hidden max-w-md mx-auto glass-panel oneui-card p-6 border border-teal-500/30">
+                <div class="text-center mb-6">
+                    <span class="text-4xl">📱</span>
+                    <h2 class="text-2xl font-black mt-2 text-teal-400 uppercase">Мобільний запис</h2>
+                    <p class="text-xs text-gray-400">Швидке оформлення у 5 кроків</p>
+                </div>
+
+                <!-- Wizard Progress Indicator -->
+                <div class="flex items-center justify-between mb-6 px-4">
+                    <span id="stepBadge" class="text-xs font-bold bg-teal-500/20 text-teal-300 px-3 py-1 rounded-full">Крок 1 з 5</span>
+                </div>
+
+                <!-- Step Fields Container -->
+                <div class="space-y-4">
+                    <!-- Step 1: Plate number -->
+                    <div id="mstep-1">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Державний номер (Не обов'язково)</label>
+                        <input type="text" id="mCarPlate" oninput="this.value = this.value.toUpperCase();" placeholder="AA1234BB (або пусто)" class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 text-white text-lg font-mono font-bold focus:outline-none focus:border-teal-400">
+                    </div>
+
+                    <!-- Step 2: Order Code -->
+                    <div id="mstep-2" class="hidden">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Код замовлення (Обов'язково)</label>
+                        <input type="text" id="mOrderCode" placeholder="Наприклад: TOZ0" class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 text-white text-lg font-mono font-bold focus:outline-none focus:border-teal-400">
+                    </div>
+
+                    <!-- Step 3: Brand Selector -->
+                    <div id="mstep-3" class="hidden space-y-2">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Оберіть Марку</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="setMobileBrand('seat&cupra')" class="mbrand-btn oneui-btn bg-teal-500 text-black py-2.5 text-xs font-bold">Cupra/Seat</button>
+                            <button onclick="setMobileBrand('audi')" class="mbrand-btn oneui-btn bg-gray-800 py-2.5 text-xs font-semibold">Audi</button>
+                            <button onclick="setMobileBrand('vw')" class="mbrand-btn oneui-btn bg-gray-800 py-2.5 text-xs font-semibold">VW</button>
+                            <button onclick="setMobileBrand('skoda')" class="mbrand-btn oneui-btn bg-gray-800 py-2.5 text-xs font-semibold">Skoda</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Category/Post -->
+                    <div id="mstep-4" class="hidden space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Тип заїзду</label>
+                            <select id="mServiceType" class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 text-white">
+                                <option value="Сервіс" selected>Сервіс</option>
+                                <option value="Мийка">Мийка</option>
+                                <option value="Шиномонтаж">Шиномонтаж</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Ремонтний пост</label>
+                            <select id="mAssignedPost" class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 text-white">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Final Review & Submit -->
+                    <div id="mstep-5" class="hidden text-center space-y-4">
+                        <div class="p-4 bg-gray-900/60 border border-gray-800 rounded-2xl text-left text-sm space-y-2">
+                            <div class="flex justify-between"><span>Держ номер:</span> <span id="mReviewPlate" class="font-bold text-white">-</span></div>
+                            <div class="flex justify-between"><span>Код замовлення:</span> <span id="mReviewCode" class="font-bold text-white">-</span></div>
+                            <div class="flex justify-between"><span>Марка авто:</span> <span id="mReviewBrand" class="font-bold text-white">-</span></div>
+                            <div class="flex justify-between"><span>Пост:</span> <span id="mReviewPost" class="font-bold text-white">-</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Actions -->
+                <div class="flex items-center justify-between mt-8 pt-4 border-t border-gray-800/80">
+                    <button onclick="prevMobileStep()" id="mPrevBtn" class="oneui-btn bg-gray-800 text-white font-semibold px-5 py-2.5 text-sm hidden">Назад</button>
+                    <div class="flex-grow"></div>
+                    <button onclick="nextMobileStep()" id="mNextBtn" class="oneui-btn bg-teal-500 hover:bg-teal-600 text-black font-extrabold px-6 py-2.5 text-sm">Далі →</button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- CHAT / COMMUNICATION HUB ACTION FOOTER (For non-admin, non-infomonitor) -->
+        <footer id="globalFooterBar" class="mt-6 p-4 glass-panel oneui-card flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-semibold uppercase text-gray-400">Швидке повідомлення:</span>
+                <input type="text" id="chatMessageInput" placeholder="Введіть текст оголошення..." class="bg-gray-900/80 border border-gray-800 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:border-amber-500 w-64">
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="sendChatMessage('all')" class="oneui-btn bg-amber-500/20 border border-amber-500/40 text-amber-400 px-4 py-2 text-xs font-semibold hover:bg-amber-500/30">Надіслати всім</button>
+                <button onclick="sendChatMessage('infomonitor')" class="oneui-btn bg-purple-500/20 border border-purple-500/40 text-purple-300 px-4 py-2 text-xs font-semibold hover:bg-purple-500/30">На інфо монітор</button>
+                <button id="infoM_Btn" onclick="sendInfoM_Notification()" class="oneui-btn bg-sky-500/20 border border-sky-500/40 text-sky-300 px-4 py-2 text-xs font-semibold hover:bg-sky-500/30 hidden">Інфо.М</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- GLOBAL INTERACTIVE BANNER / ONE UI POP-UP MODAL -->
+    <div id="globalBanner" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-lg glass-panel oneui-card p-6 border-l-4 border-amber-500 animate-banner z-50">
+        <div class="flex items-start gap-4">
+            <div class="text-3xl text-amber-500">🔔</div>
+            <div class="flex-grow">
+                <h4 id="bannerTitle" class="text-lg font-extrabold text-white">Сповіщення системи</h4>
+                <p id="bannerBody" class="text-sm text-gray-300 mt-1">Опис події</p>
+            </div>
+            <button onclick="closeGlobalBanner()" class="text-gray-400 hover:text-white text-lg">×</button>
+        </div>
+    </div>
+
+    <!-- ONE UI CONFIRMATION DIALOG (MODAL) -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="glass-panel oneui-card p-6 w-full max-w-sm text-center border border-gray-800">
+            <h3 class="text-lg font-bold text-white" id="confirmTitle">Видалити запис?</h3>
+            <p class="text-sm text-gray-400 mt-2" id="confirmMessage">Дія безповоротна. Ви впевнені, що хочете видалити?</p>
+            <div class="flex justify-center gap-4 mt-6">
+                <button id="confirmYesBtn" class="oneui-btn bg-red-500 hover:bg-red-600 text-white px-5 py-2 text-sm font-semibold">Так, видалити</button>
+                <button onclick="closeConfirmModal()" class="oneui-btn bg-gray-800 hover:bg-gray-700 text-white px-5 py-2 text-sm font-semibold">Скасувати</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SYSTEM JAVASCRIPT & STATE MANAGEMENT -->
+    <script>
+        const socket = io();
+
+        // Application reactive state
+        let appState = {
+            orders: [],
+            settings: {
+                naryads: [],
+                posts: []
+            },
+            warehouse: []
+        };
+
+        let currentView = 'home';
+        let selectedBrandValue = 'seat&cupra';
+        let mobileWizardStep = 1;
+        let mobileSelectedBrand = 'seat&cupra';
+
+        // Initialize WebSocket connection
+        socket.on('initialState', (state) => {
+            appState = state;
+            renderAll();
+        });
+
+        socket.on('ordersUpdated', (orders) => {
+            appState.orders = orders;
+            renderAll();
+        });
+
+        socket.on('warehouseUpdated', (warehouse) => {
+            appState.warehouse = warehouse;
+            renderAll();
+        });
+
+        socket.on('settingsUpdated', (settings) => {
+            appState.settings = settings;
+            renderAll();
+        });
+
+        socket.on('messageReceived', (payload) => {
+            // Trigger sound for specific message notifications
+            triggerBell();
+            
+            // Show alert/banner if it concerns this client view
+            showNotification(payload.sender, payload.text);
+        });
+
+        // Time ticker synced across UI views
+        function tickTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('uk-UA', { hour12: false });
+            const dateStr = now.toLocaleDateString('uk-UA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            const clockEl = document.getElementById('headerTime');
+            const dateEl = document.getElementById('headerDate');
+            const infoclockEl = document.getElementById('infomonitorTime');
+            
+            if (clockEl) clockEl.innerText = timeStr;
+            if (dateEl) dateEl.innerText = dateStr;
+            if (infoclockEl) infoclockEl.innerText = timeStr;
+        }
+        setInterval(tickTime, 1000);
+        tickTime();
+
+        // Switch application screen views
+        function switchView(viewName) {
+            currentView = viewName;
+            
+            // Toggle Back Button visibility
+            const backBtn = document.getElementById('backBtn');
+            if (viewName === 'home') {
+                backBtn.classList.add('hidden');
+            } else {
+                backBtn.classList.remove('hidden');
+            }
+
+            // Show/Hide specific HTML containers
+            ['home', 'service', 'warehouse', 'mechanics', 'infomonitor', 'admin', 'mobile'].forEach(view => {
+                const el = document.getElementById(`view-${view}`);
+                if (view === viewName) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            // Adjust show of info-footer specific elements
+            const infoM_Btn = document.getElementById('infoM_Btn');
+            const footer = document.getElementById('globalFooterBar');
+            if (viewName === 'service') {
+                infoM_Btn.classList.remove('hidden');
+            } else {
+                infoM_Btn.classList.add('hidden');
+            }
+
+            // Hide chat footer in admin, infomonitor and mobile views
+            if (['admin', 'infomonitor', 'mobile'].includes(viewName)) {
+                footer.classList.add('hidden');
+            } else {
+                footer.classList.remove('hidden');
+            }
+
+            renderAll();
+        }
+
+        function goHome() {
+            switchView('home');
+        }
+
+        // Selected brand helper for creation form
+        function selectBrand(brand) {
+            selectedBrandValue = brand;
+            document.querySelectorAll('.brand-btn').forEach(btn => {
+                btn.classList.replace('bg-amber-500', 'bg-gray-800');
+                btn.classList.replace('text-black', 'text-white');
+                btn.classList.add('hover:bg-gray-700');
+            });
+            event.currentTarget.classList.replace('bg-gray-800', 'bg-amber-500');
+            event.currentTarget.classList.replace('text-white', 'text-black');
+            
+            const customBrandInput = document.getElementById('customBrand');
+            if (brand === 'other') {
+                customBrandInput.classList.remove('hidden');
+            } else {
+                customBrandInput.classList.add('hidden');
+            }
+        }
+
+        function setMobileBrand(brand) {
+            mobileSelectedBrand = brand;
+            document.querySelectorAll('.mbrand-btn').forEach(btn => {
+                btn.classList.replace('bg-teal-500', 'bg-gray-800');
+                btn.classList.replace('text-black', 'text-white');
+            });
+            event.currentTarget.classList.replace('bg-gray-800', 'bg-teal-500');
+            event.currentTarget.classList.replace('text-white', 'text-black');
+        }
+
+        // Handle Order Creation (Service view)
+        function createBooking(inWorkImmediately = false) {
+            const plate = document.getElementById('carPlate').value.trim().toUpperCase();
+            const code = document.getElementById('orderCode').value.trim();
+            const serviceType = document.getElementById('serviceType').value;
+            const bookingTime = document.getElementById('bookingTime').value;
+            const assignedPost = document.getElementById('assignedPost').value;
+
+            if (!code) {
+                alert('Номер наряду є обовʼязковим полем!');
+                return;
+            }
+
+            // Determine brand string
+            let brand = selectedBrandValue;
+            if (brand === 'other') {
+                brand = document.getElementById('customBrand').value.trim() || 'Інша';
+            }
+
+            // Find matching settings from Admin settings
+            const naryadMatch = appState.settings.naryads.find(n => code.startsWith(n.code)) || { desc: 'Сервіс', time: '30' };
+            
+            const newOrder = {
+                id: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
+                plate: plate || '№ N/O',
+                code: code,
+                brand: brand,
+                serviceType: serviceType,
+                bookingTime: bookingTime,
+                assignedPost: assignedPost,
+                description: naryadMatch.desc,
+                plannedDuration: naryadMatch.time, // can be format '30' or '1:30'
+                status: inWorkImmediately ? 'В роботі' : 'Очікує',
+                timeCreated: new Date().toISOString(),
+                delayMinutes: 0,
+                extraTime: 0,
+                warehouseStatus: 'Очікує збірки',
+                statusChangedTime: new Date().toISOString()
+            };
+
+            // Post immediately into orders
+            appState.orders.push(newOrder);
+            socket.emit('updateOrders', appState.orders);
+
+            // If immediately put in work, send a trigger notification to warehouse
+            if (inWorkImmediately) {
+                triggerWarehouseOrder(newOrder);
+            }
+
+            // Reset booking form
+            document.getElementById('bookingForm').reset();
+            selectBrand('seat&cupra');
+            alert('Замовлення успішно створено!');
+        }
+
+        function triggerWarehouseOrder(order) {
+            const isWarehouseCategory = (order.description === 'Технічне обслуговування');
+            
+            // Broadcast standard socket notification banner
+            socket.emit('sendMessage', {
+                target: 'all',
+                sender: 'Склад',
+                text: `Нове замовлення №${order.code} для авто ${order.plate} (${order.description})`
+            });
+        }
+
+        // Delete/Refusal action with confirmation dialog
+        let deleteTargetId = null;
+        function initiateRefusal(orderId) {
+            deleteTargetId = orderId;
+            document.getElementById('confirmTitle').innerText = 'Відмова від ремонту?';
+            document.getElementById('confirmMessage').innerText = 'Це замовлення буде безповоротно видалено з системи.';
+            const yesBtn = document.getElementById('confirmYesBtn');
+            yesBtn.onclick = executeRefusal;
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function executeRefusal() {
+            if (deleteTargetId) {
+                appState.orders = appState.orders.filter(o => o.id !== deleteTargetId);
+                socket.emit('updateOrders', appState.orders);
+                closeConfirmModal();
+            }
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            deleteTargetId = null;
+        }
+
+        // Take ordered car into work instantly
+        function takeToWork(orderId) {
+            const order = appState.orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = 'В роботі';
+                order.statusChangedTime = new Date().toISOString();
+                socket.emit('updateOrders', appState.orders);
+                triggerWarehouseOrder(order);
+            }
+        }
+
+        // Render functions for dynamic parts of UI
+        function renderAll() {
+            renderBadges();
+            if (currentView === 'service') renderServiceView();
+            if (currentView === 'warehouse') renderWarehouseView();
+            if (currentView === 'mechanics') renderMechanicsView();
+            if (currentView === 'infomonitor') renderInfoMonitorView();
+            if (currentView === 'admin') renderAdminView();
+            
+            // Auto populate post options in form
+            populatePostSelects();
+        }
+
+        function renderBadges() {
+            const inWorkCount = appState.orders.filter(o => o.status === 'В роботі').length;
+            document.getElementById('badge-service').innerText = `${inWorkCount} в роботі`;
+            
+            const activeWarehouse = appState.orders.filter(o => o.status === 'В роботі').length;
+            document.getElementById('badge-warehouse').innerText = `${activeWarehouse} збірок`;
+
+            const mechanicsActive = appState.settings.posts.filter(p => p.active).length;
+            document.getElementById('badge-mechanics').innerText = `${mechanicsActive} постів`;
+        }
+
+        function populatePostSelects() {
+            const postSel = document.getElementById('assignedPost');
+            const mPostSel = document.getElementById('mAssignedPost');
+            
+            let html = '';
+            appState.settings.posts.forEach(p => {
+                if (p.active) {
+                    html += `<option value="${p.name}">${p.name} - ${p.mechanic}</option>`;
+                }
+            });
+
+            if (html === '') {
+                html = '<option value="Пост 1">Пост 1 (За замовчуванням)</option>';
+            }
+
+            if (postSel) postSel.innerHTML = html;
+            if (mPostSel) mPostSel.innerHTML = html;
+        }
+
+        // Timers formatting helper
+        function formatMinutes(totalMins) {
+            if (totalMins > 99) {
+                const h = Math.floor(totalMins / 60);
+                const m = totalMins % 60;
+                return `${h}:${m < 10 ? '0' + m : m}`;
+            }
+            return `${totalMins}`;
+        }
+
+        // ------------------ RENDERING VIEWS ------------------
+
+        // Render Service View Queue
+        function renderServiceView() {
+            const listContainer = document.getElementById('serviceQueueList');
+            if (!listContainer) return;
+
+            if (appState.orders.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-12 text-gray-500">Записів на сьогодні немає. Створіть перший запис зліва!</div>`;
+                return;
+            }
+
+            let html = '';
+            appState.orders.forEach(o => {
+                // Calculate delay or countdown to appointment
+                const now = new Date();
+                const [bookH, bookM] = o.bookingTime.split(':').map(Number);
+                const bookDate = new Date();
+                bookDate.setHours(bookH, bookM, 0, 0);
+
+                let diffMins = Math.floor((bookDate - now) / 60000);
+                let timerLabel = '';
+                let timerClass = 'text-gray-300';
+                
+                if (o.status === 'Очікує') {
+                    if (diffMins < 0) {
+                        const lateVal = Math.abs(diffMins);
+                        timerLabel = `Запізнюється на ${formatMinutes(lateVal)} хв`;
+                        timerClass = 'text-red-500 font-bold';
+                    } else {
+                        timerLabel = `Приїде через ${diffMins} хв`;
+                        timerClass = 'text-emerald-400 font-semibold';
+                    }
+                } else if (o.status === 'В роботі') {
+                    timerLabel = 'В РОБОТІ';
+                    timerClass = 'text-sky-400 font-black';
+                } else if (o.status === 'Ремонт завершено') {
+                    timerLabel = 'ГОТОВИЙ ДО ВИДАЧІ';
+                    timerClass = 'text-emerald-400 font-black animate-pulse';
+                }
+
+                html += `
+                <div class="glass-panel p-5 oneui-card border border-gray-800 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl font-mono font-black tracking-widest text-white">${o.plate}</span>
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-gray-800 font-semibold text-gray-300">${o.brand}</span>
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">${o.serviceType}</span>
+                        </div>
+                        <div class="mt-2 text-sm text-gray-400">
+                            Наряд: <strong class="text-gray-200">${o.code}</strong> • ${o.description} | Призначено: <strong>${o.assignedPost}</strong>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            Час запису: <span class="text-amber-500 font-semibold">${o.bookingTime}</span> • Склад: <strong class="text-blue-400">${o.warehouseStatus || 'Очікує'}</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="${timerClass} text-sm uppercase tracking-wide">${timerLabel}</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${o.status === 'Очікує' ? `
+                                <button onclick="takeToWork('${o.id}')" class="oneui-btn bg-amber-500 hover:bg-amber-600 text-black px-4 py-2 text-xs font-bold uppercase">В роботу</button>
+                                <button onclick="initiateRefusal('${o.id}')" class="oneui-btn bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/30 px-4 py-2 text-xs font-semibold">Відмова</button>
+                            ` : ''}
+                            ${o.status === 'В роботі' ? `
+                                <button onclick="initiateRefusal('${o.id}')" class="oneui-btn bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/30 px-4 py-2 text-xs font-semibold">Відмова</button>
+                            ` : ''}
+                            ${o.status === 'Ремонт завершено' ? `
+                                <button onclick="completeClientIssue('${o.id}')" class="oneui-btn bg-emerald-500 hover:bg-emerald-600 text-black px-5 py-2 text-xs font-bold uppercase">Видати авто</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+        }
+
+        // Render Warehouse Cards list
+        function renderWarehouseView() {
+            const wContainer = document.getElementById('warehouseQueue');
+            if (!wContainer) return;
+
+            // Warehouse only shows cars that are "В роботі" or "Ремонт завершено"
+            const activeWOrders = appState.orders.filter(o => o.status === 'В роботі' || o.status === 'Ремонт завершено');
+
+            if (activeWOrders.length === 0) {
+                wContainer.innerHTML = `<div class="col-span-3 text-center py-12 text-gray-500">Немає замовлень на комплектування запчастин.</div>`;
+                return;
+            }
+
+            let html = '';
+            activeWOrders.forEach(o => {
+                let borderClass = 'border-amber-500/20';
+                let actionBtn = '';
+                
+                if (o.warehouseStatus === 'Очікує збірки') {
+                    borderClass = 'border-amber-500/40';
+                    actionBtn = `<button onclick="updateWarehouseState('${o.id}', 'Збирається')" class="oneui-btn w-full bg-amber-500 hover:bg-amber-600 text-black font-extrabold py-3 text-sm">Збирати запчастини</button>`;
+                } else if (o.warehouseStatus === 'Збирається') {
+                    borderClass = 'border-sky-500/40';
+                    actionBtn = `<button onclick="updateWarehouseState('${o.id}', 'Завершено')" class="oneui-btn w-full bg-sky-600 hover:bg-sky-500 text-white font-extrabold py-3 text-sm">Завершити</button>`;
+                } else if (o.warehouseStatus === 'Завершено') {
+                    borderClass = 'border-emerald-500/40';
+                    actionBtn = `<div class="text-center text-xs font-bold text-emerald-400 uppercase tracking-widest py-3">Запчастини зібрано ✅</div>`;
+                }
+
+                html += `
+                <div class="glass-panel oneui-card p-6 border ${borderClass} relative flex flex-col justify-between h-64">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-2xl font-mono font-black text-white">${o.plate}</span>
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-gray-800 text-gray-400">${o.brand}</span>
+                        </div>
+                        <p class="text-xs font-semibold text-amber-500 mt-2">${o.code}</p>
+                        <p class="text-sm font-bold text-gray-300 mt-1">${o.description}</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>Поточний статус:</span>
+                            <span class="font-bold text-white uppercase">${o.warehouseStatus}</span>
+                        </div>
+                        ${actionBtn}
+                    </div>
+                </div>
+                `;
+            });
+            wContainer.innerHTML = html;
+        }
+
+        function updateWarehouseState(orderId, nextState) {
+            const order = appState.orders.find(o => o.id === orderId);
+            if (order) {
+                order.warehouseStatus = nextState;
+                if (nextState === 'Завершено') {
+                    // Update main status in service
+                    order.warehouseStatus = 'Запчастини зібрані';
+                    
+                    // Trigger a 5-second complete screen alert, then a 2-minute autoremove countdown from warehouse screen
+                    setTimeout(() => {
+                        socket.emit('sendMessage', {
+                            target: 'all',
+                            sender: 'Склад',
+                            text: `Комплектація запчастин для ${order.plate} успішно завершена!`
+                        });
+                    }, 5000);
+                }
+                socket.emit('updateOrders', appState.orders);
+            }
+        }
+
+        // Render Mechanics interactive monitor dashboard (CNAР style rows)
+        function renderMechanicsView() {
+            const mContainer = document.getElementById('mechanicsQueue');
+            if (!mContainer) return;
+
+            // Shows in-work orders or upcoming appointments < 1 hour
+            let mOrders = appState.orders.filter(o => {
+                if (o.status === 'В роботі' || o.status === 'Ремонт завершено') return true;
+                if (o.status === 'Очікує') {
+                    const now = new Date();
+                    const [bookH, bookM] = o.bookingTime.split(':').map(Number);
+                    const bookDate = new Date();
+                    bookDate.setHours(bookH, bookM, 0, 0);
+                    let diffMins = Math.floor((bookDate - now) / 60000);
+                    return diffMins <= 60; // within 1 hour
+                }
+                return false;
+            });
+
+            if (mOrders.length === 0) {
+                mContainer.innerHTML = `<div class="text-center py-12 text-gray-500">Жодного активного поста чи заїзду на найближчу годину.</div>`;
+                return;
+            }
+
+            let html = '';
+            mOrders.forEach(o => {
+                // Determine layout & text for mechanics state machine
+                let statusText = 'Очікується заїзд';
+                let timerLabel = '';
+                let statusColor = 'text-amber-500';
+
+                // Live status timelines
+                if (o.status === 'Очікує') {
+                    const now = new Date();
+                    const [bookH, bookM] = o.bookingTime.split(':').map(Number);
+                    const bookDate = new Date();
+                    bookDate.setHours(bookH, bookM, 0, 0);
+                    let diffMins = Math.floor((bookDate - now) / 60000);
+
+                    if (diffMins < 0) {
+                        statusText = 'Авто запізнюється';
+                        timerLabel = `Запізнення: ${formatMinutes(Math.abs(diffMins))} хв`;
+                        statusColor = 'text-red-500 font-bold';
+                    } else {
+                        statusText = 'Очікується заїзд';
+                        timerLabel = `До заїзду: ${diffMins} хв`;
+                        statusColor = 'text-amber-400';
+                    }
+                } else if (o.status === 'В роботі') {
+                    // Check if 3 mins passed since status transition to simulate 'Transit to location'
+                    const elapsedSecs = Math.floor((new Date() - new Date(o.statusChangedTime)) / 1000);
+                    if (elapsedSecs < 180) { // first 3 minutes
+                        statusText = 'Прямує на ділянку 🚗';
+                        const remSecs = 180 - elapsedSecs;
+                        timerLabel = `Заїзд через: ${Math.floor(remSecs / 60)}:${(remSecs % 60) < 10 ? '0' + (remSecs % 60) : (remSecs % 60)}`;
+                        statusColor = 'text-sky-400 animate-pulse';
+                    } else {
+                        // In execution. Compute duration countdown
+                        const durationMins = parseDuration(o.plannedDuration) + Number(o.extraTime);
+                        const workElapsedMins = Math.floor((elapsedSecs - 180) / 60);
+                        const remMins = durationMins - workElapsedMins;
+
+                        if (remMins <= 0) {
+                            statusText = 'Авто затримується ⚠️';
+                            timerLabel = `Прострочено на: ${Math.abs(remMins)} хв`;
+                            statusColor = 'text-red-500 font-bold';
+                        } else {
+                            statusText = 'Виконується ремонт';
+                            timerLabel = `Буде завершено через: ${remMins} хв`;
+                            statusColor = 'text-emerald-400';
+                        }
+                    }
+                } else if (o.status === 'Ремонт завершено') {
+                    statusText = 'Ремонт завершено';
+                    timerLabel = 'Готовий до видачі';
+                    statusColor = 'text-emerald-500 font-extrabold';
+                }
+
+                html += `
+                <div class="glass-panel oneui-card p-5 border border-gray-800 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl font-mono font-bold text-white">${o.plate}</span>
+                            <span class="text-xs bg-gray-800 px-2.5 py-1 rounded-full text-gray-300 font-bold">${o.brand}</span>
+                            <span class="text-xs text-amber-500 uppercase tracking-widest font-extrabold">${o.assignedPost}</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mt-2">
+                            Наряд: <strong class="text-white">${o.code}</strong> — ${o.description} | План. час: <span class="text-amber-500">${o.plannedDuration} хв</span>
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-6">
+                        <div class="text-right">
+                            <div class="text-xs uppercase text-gray-500 tracking-wider font-semibold">Статус посту</div>
+                            <div class="text-lg font-black ${statusColor}">${statusText}</div>
+                            <div class="text-xs text-gray-400 font-mono mt-0.5">${timerLabel}</div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            ${o.status === 'В роботі' ? `
+                                <button onclick="completeRepairMechanic('${o.id}')" class="oneui-btn bg-emerald-500 hover:bg-emerald-600 text-black px-4 py-2 text-xs font-bold uppercase">Завершити ремонт</button>
+                                <button onclick="requestExtraTimePrompt('${o.id}')" class="oneui-btn bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 text-xs font-semibold">Додати час</button>
+                            ` : ''}
+                            <button onclick="editPostPrompt('${o.id}')" class="oneui-btn bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 text-xs font-semibold">Редагувати</button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            mContainer.innerHTML = html;
+        }
+
+        // Parse duration formats to absolute minutes ('1:30' -> 90)
+        function parseDuration(val) {
+            if (!val) return 30;
+            if (val.includes(':')) {
+                const [h, m] = val.split(':').map(Number);
+                return (h * 60) + m;
+            }
+            return Number(val) || 30;
+        }
+
+        function requestExtraTimePrompt(orderId) {
+            const extra = prompt('Вкажіть додатковий час ремонту в хвилинах (наприклад: 30):', '30');
+            if (extra !== null) {
+                const order = appState.orders.find(o => o.id === orderId);
+                if (order) {
+                    order.extraTime = (Number(order.extraTime) || 0) + (Number(extra) || 0);
+                    socket.emit('updateOrders', appState.orders);
+                    
+                    // Alert Info monitor immediately
+                    socket.emit('sendMessage', {
+                        target: 'infomonitor',
+                        sender: 'Сервіс',
+                        text: `Авто ${order.plate} потребує додаткового часу: +${extra} хв.`
+                    });
+                }
+            }
+        }
+
+        function editPostPrompt(orderId) {
+            const order = appState.orders.find(o => o.id === orderId);
+            if (order) {
+                const activePosts = appState.settings.posts.filter(p => p.active);
+                let optionsText = activePosts.map((p, idx) => `${idx + 1}. ${p.name} - ${p.mechanic}`).join('\n');
+                
+                const selection = prompt(`Оберіть новий ремонтний пост:\n${optionsText}\n\nВведіть номер поста (1-${activePosts.length}):`, '1');
+                if (selection) {
+                    const idx = Number(selection) - 1;
+                    if (activePosts[idx]) {
+                        order.assignedPost = activePosts[idx].name;
+                        socket.emit('updateOrders', appState.orders);
+                        alert(`Пост успішно змінено на ${activePosts[idx].name}!`);
+                    }
+                }
+            }
+        }
+
+        function completeRepairMechanic(orderId) {
+            const order = appState.orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = 'Ремонт завершено';
+                order.statusChangedTime = new Date().toISOString();
+                socket.emit('updateOrders', appState.orders);
+
+                // Broadcast large notification banner alert
+                socket.emit('sendMessage', {
+                    target: 'all',
+                    sender: 'Механік',
+                    text: `Ремонт автомобіля ${order.brand} (наряд: ${order.code}, держномер ${order.plate}) успішно ЗАВЕРШЕНО!`
+                });
+            }
+        }
+
+        function completeClientIssue(orderId) {
+            // Reception completes and hands vehicle back to client
+            appState.orders = appState.orders.filter(o => o.id !== orderId);
+            socket.emit('updateOrders', appState.orders);
+            alert('Автомобіль видано клієнту!');
+        }
+
+        // Render Client Info-monitor board layout
+        function renderInfoMonitorView() {
+            const rowContainer = document.getElementById('infomonitorRows');
+            if (!rowContainer) return;
+
+            let broadcastOrders = appState.orders.filter(o => {
+                if (o.status === 'В роботі' || o.status === 'Ремонт завершено') return true;
+                if (o.status === 'Очікує') {
+                    const now = new Date();
+                    const [bookH, bookM] = o.bookingTime.split(':').map(Number);
+                    const bookDate = new Date();
+                    bookDate.setHours(bookH, bookM, 0, 0);
+                    let diffMins = Math.floor((bookDate - now) / 60000);
+                    return diffMins <= 60; // within 1 hour
+                }
+                return false;
+            });
+
+            if (broadcastOrders.length === 0) {
+                rowContainer.innerHTML = `<div class="text-center py-16 text-gray-500 text-xl font-bold">Очікуваних заїздів немає. Сервіс CUPRA працює для вас!</div>`;
+                return;
+            }
+
+            let html = '';
+            broadcastOrders.forEach(o => {
+                let badgeText = 'Очікуємо';
+                let badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+                let clockVal = o.bookingTime;
+                let clockLabel = 'ЗАПИС НА';
+                let clockColor = 'text-amber-500';
+
+                if (o.status === 'Очікує') {
+                    badgeText = 'ЗАПИСАНО НА СЕРВІС';
+                    badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+                } else if (o.status === 'В роботі') {
+                    const elapsedSecs = Math.floor((new Date() - new Date(o.statusChangedTime)) / 1000);
+                    if (elapsedSecs < 180) {
+                        badgeText = 'Прямує на ділянку 🚗';
+                        badgeColor = 'bg-sky-500/10 text-sky-400 border-sky-500/30 animate-pulse';
+                        clockLabel = 'ЧАС ПРИБУТТЯ';
+                        clockColor = 'text-sky-400';
+                        
+                        const remSecs = 180 - elapsedSecs;
+                        clockVal = `0${Math.floor(remSecs / 60)}:${(remSecs % 60) < 10 ? '0' + (remSecs % 60) : (remSecs % 60)}`;
+                    } else {
+                        badgeText = 'В РОБОТІ';
+                        badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+                        clockLabel = 'ДО ВИДАЧІ';
+                        clockColor = 'text-emerald-400';
+
+                        const durationMins = parseDuration(o.plannedDuration) + Number(o.extraTime);
+                        const workElapsedMins = Math.floor((elapsedSecs - 180) / 60);
+                        const remMins = durationMins - workElapsedMins;
+
+                        if (remMins <= 0) {
+                            badgeText = 'ЗАТРИМУЄТЬСЯ';
+                            badgeColor = 'bg-red-500/10 text-red-400 border-red-500/30 animate-pulse';
+                            clockLabel = 'ЧАС ПЕРЕВИЩЕНО';
+                            clockColor = 'text-red-500';
+                            clockVal = `${Math.abs(remMins)} хв`;
+                        } else {
+                            clockVal = `${remMins} хв`;
+                        }
+                    }
+                } else if (o.status === 'Ремонт завершено') {
+                    badgeText = 'РЕМОНТ ЗАВЕРШЕНО ✅';
+                    badgeColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 animate-pulse';
+                    clockLabel = 'ЧЕКАЄ ВИДАЧІ';
+                    clockColor = 'text-emerald-300';
+                    clockVal = 'ГОТОВИЙ';
+                }
+
+                html += `
+                <div class="glass-panel oneui-card p-6 border border-gray-800 flex items-center justify-between">
+                    <div class="flex items-center gap-6">
+                        <div class="text-4xl text-gray-500">🚘</div>
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl font-mono font-black text-white">${o.plate}</span>
+                                <span class="text-sm font-extrabold uppercase px-3 py-1 rounded-full ${badgeColor} border">${badgeText}</span>
+                            </div>
+                            <div class="text-lg font-extrabold text-gray-200 mt-1">${o.brand}</div>
+                            <div class="text-sm text-gray-400">${o.description} | Пост: ${o.assignedPost}</div>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <div class="text-xs uppercase text-gray-500 tracking-widest font-semibold">${clockLabel}</div>
+                        <div class="text-4xl font-mono font-black ${clockColor}">${clockVal}</div>
+                    </div>
+                </div>
+                `;
+            });
+            rowContainer.innerHTML = html;
+        }
+
+        // Render Administrative layout
+        function renderAdminView() {
+            const naryadContainer = document.getElementById('adminNaryadTable');
+            const postsContainer = document.getElementById('adminPostsList');
+
+            if (naryadContainer && appState.settings.naryads) {
+                let html = '';
+                // Fill up exactly 10 rows
+                for (let i = 0; i < 10; i++) {
+                    const row = appState.settings.naryads[i] || { code: '', desc: '', time: '' };
+                    html += `
+                    <tr>
+                        <td class="p-2">
+                            <input type="text" id="naryad-code-${i}" value="${row.code}" class="bg-gray-900 border border-gray-800 rounded px-2 py-1 text-white text-xs font-mono font-bold w-24">
+                        </td>
+                        <td class="p-2">
+                            <input type="text" id="naryad-desc-${i}" value="${row.desc}" class="bg-gray-900 border border-gray-800 rounded px-2 py-1 text-white text-xs w-full">
+                        </td>
+                        <td class="p-2">
+                            <input type="text" id="naryad-time-${i}" value="${row.time}" class="bg-gray-900 border border-gray-800 rounded px-2 py-1 text-white text-xs font-semibold w-24">
+                        </td>
+                    </tr>
+                    `;
+                }
+                naryadContainer.innerHTML = html;
+            }
+
+            if (postsContainer && appState.settings.posts) {
+                let html = '';
+                // Render exactly 7 rows of posts
+                for (let i = 0; i < 7; i++) {
+                    const post = appState.settings.posts[i] || { id: i + 1, name: `Пост ${i + 1}`, active: false, mechanic: '' };
+                    html += `
+                    <div class="flex items-center gap-4 bg-gray-900/40 p-3 rounded-2xl border border-gray-800/80">
+                        <input type="checkbox" id="post-active-${i}" ${post.active ? 'checked' : ''} class="w-5 h-5 accent-emerald-500 rounded">
+                        <span class="text-sm font-bold text-white w-20">${post.name}</span>
+                        <input type="text" id="post-mech-${i}" value="${post.mechanic}" placeholder="ПІП механіка" class="bg-gray-900 border border-gray-800 rounded-xl px-3 py-1.5 text-xs text-white flex-grow focus:outline-none focus:border-amber-500">
+                    </div>
+                    `;
+                }
+                postsContainer.innerHTML = html;
+            }
+        }
+
+        // Save admin changes locally and broadcast back to sever
+        function saveAdminSettings() {
+            // Read naryads
+            const newNaryads = [];
+            for (let i = 0; i < 10; i++) {
+                const code = document.getElementById(`naryad-code-${i}`).value.trim();
+                const desc = document.getElementById(`naryad-desc-${i}`).value.trim();
+                const time = document.getElementById(`naryad-time-${i}`).value.trim();
+                if (code) {
+                    newNaryads.push({ code, desc, time });
+                }
+            }
+
+            // Read posts
+            const newPosts = [];
+            for (let i = 0; i < 7; i++) {
+                const active = document.getElementById(`post-active-${i}`).checked;
+                const mechanic = document.getElementById(`post-mech-${i}`).value.trim();
+                newPosts.push({
+                    id: i + 1,
+                    name: `Пост ${i + 1}`,
+                    active,
+                    mechanic
+                });
+            }
+
+            appState.settings = { naryads: newNaryads, posts: newPosts };
+            socket.emit('updateSettings', appState.settings);
+            alert('Налаштування адміністратора збережено та поширено по системі!');
+        }
+
+        // MOBILE WIZARD STEP SYSTEM (PHONE PORTRAIT LAYOUT)
+        function nextMobileStep() {
+            if (mobileWizardStep < 5) {
+                // validation
+                if (mobileWizardStep === 2) {
+                    const code = document.getElementById('mOrderCode').value.trim();
+                    if (!code) {
+                        alert('Будь ласка, вкажіть код наряду!');
+                        return;
+                    }
+                }
+
+                document.getElementById(`mstep-${mobileWizardStep}`).classList.add('hidden');
+                mobileWizardStep++;
+                document.getElementById(`mstep-${mobileWizardStep}`).classList.remove('hidden');
+                
+                // Show Prev button if needed
+                if (mobileWizardStep > 1) {
+                    document.getElementById('mPrevBtn').classList.remove('hidden');
+                }
+
+                // If step 5, compile Review details
+                if (mobileWizardStep === 5) {
+                    document.getElementById('mReviewPlate').innerText = document.getElementById('mCarPlate').value.trim().toUpperCase() || '№ N/O';
+                    document.getElementById('mReviewCode').innerText = document.getElementById('mOrderCode').value.trim();
+                    document.getElementById('mReviewBrand').innerText = mobileSelectedBrand;
+                    document.getElementById('mReviewPost').innerText = document.getElementById('mAssignedPost').value;
+                    document.getElementById('mNextBtn').innerText = 'Записати 🚀';
+                }
+
+                document.getElementById('stepBadge').innerText = `Крок ${mobileWizardStep} з 5`;
+            } else {
+                // Finalize mobile wizard booking
+                executeMobileWizardBooking();
+            }
+        }
+
+        function prevMobileStep() {
+            if (mobileWizardStep > 1) {
+                document.getElementById(`mstep-${mobileWizardStep}`).classList.add('hidden');
+                mobileWizardStep--;
+                document.getElementById(`mstep-${mobileWizardStep}`).classList.remove('hidden');
+                
+                if (mobileWizardStep === 1) {
+                    document.getElementById('mPrevBtn').classList.add('hidden');
+                }
+
+                document.getElementById('mNextBtn').innerText = 'Далі →';
+                document.getElementById('stepBadge').innerText = `Крок ${mobileWizardStep} з 5`;
+            }
+        }
+
+        function executeMobileWizardBooking() {
+            const plate = document.getElementById('mCarPlate').value.trim().toUpperCase() || '№ N/O';
+            const code = document.getElementById('mOrderCode').value.trim();
+            const serviceType = document.getElementById('mServiceType').value;
+            const assignedPost = document.getElementById('mAssignedPost').value;
+
+            // Find matching settings
+            const naryadMatch = appState.settings.naryads.find(n => code.startsWith(n.code)) || { desc: 'Сервіс', time: '30' };
+
+            const newOrder = {
+                id: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
+                plate: plate,
+                code: code,
+                brand: mobileSelectedBrand,
+                serviceType: serviceType,
+                bookingTime: '10:00', // Default scheduling
+                assignedPost: assignedPost,
+                description: naryadMatch.desc,
+                plannedDuration: naryadMatch.time,
+                status: 'Очікує',
+                timeCreated: new Date().toISOString(),
+                delayMinutes: 0,
+                extraTime: 0,
+                warehouseStatus: 'Очікує збірки',
+                statusChangedTime: new Date().toISOString()
+            };
+
+            appState.orders.push(newOrder);
+            socket.emit('updateOrders', appState.orders);
+
+            alert('Запис успішно створено мобільним асистентом!');
+            
+            // reset wizard
+            document.getElementById(`mstep-${mobileWizardStep}`).classList.add('hidden');
+            mobileWizardStep = 1;
+            document.getElementById(`mstep-${mobileWizardStep}`).classList.remove('hidden');
+            document.getElementById('mPrevBtn').classList.add('hidden');
+            document.getElementById('mNextBtn').innerText = 'Далі →';
+            document.getElementById('stepBadge').innerText = `Крок ${mobileWizardStep} з 5`;
+            document.getElementById('mCarPlate').value = '';
+            document.getElementById('mOrderCode').value = '';
+
+            switchView('home');
+        }
+
+        // Global chat messaging
+        function sendChatMessage(target) {
+            const txt = document.getElementById('chatMessageInput').value.trim();
+            if (!txt) return;
+
+            if (target === 'infomonitor') {
+                const conf = confirm('Ви дійсно бажаєте вивести оголошення виключно на Клієнтське Табло?');
+                if (!conf) return;
+            }
+
+            socket.emit('sendMessage', {
+                target,
+                sender: 'Адміністратор',
+                text: txt
+            });
+
+            document.getElementById('chatMessageInput').value = '';
+        }
+
+        function sendInfoM_Notification() {
+            const txt = prompt('Введіть текст термінового виклику на Інфо Монітор:', 'Власник AA5645BI, підійдіть на сервіс');
+            if (txt) {
+                socket.emit('sendMessage', {
+                    target: 'infomonitor',
+                    sender: 'Сервіс',
+                    text: txt
+                });
+            }
+        }
+
+        // Sound Notification and Banner alerts popup
+        function triggerBell() {
+            const snd = document.getElementById('bellSound');
+            if (snd) {
+                snd.play().catch(e => console.log('Sound blocked by browser policy until interaction.'));
+            }
+        }
+
+        function showNotification(sender, text) {
+            const banner = document.getElementById('globalBanner');
+            const bTitle = document.getElementById('bannerTitle');
+            const bBody = document.getElementById('bannerBody');
+
+            if (banner && bTitle && bBody) {
+                bTitle.innerText = `Повідомлення від: ${sender}`;
+                bBody.innerText = text;
+                banner.classList.remove('hidden');
+
+                // Auto dismiss after 15 seconds
+                setTimeout(closeGlobalBanner, 15000);
+            }
+        }
+
+        function closeGlobalBanner() {
+            const banner = document.getElementById('globalBanner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        // Run render updates on intervals to update timers dynamically
+        setInterval(renderAll, 10000);
+    </script>
+</body>
+</html>
