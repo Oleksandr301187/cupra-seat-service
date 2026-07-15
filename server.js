@@ -32,13 +32,13 @@ let state = {
       { code: 'SUSP', desc: 'Ремонт підвіски', time: '1:10' }
     ],
     posts: [
-      { id: 1, name: 'Пост 1', active: true, mechanic: 'Іванов Олександр' },
-      { id: 2, name: 'Пост 2', active: true, mechanic: 'Петренко Дмитро' },
-      { id: 3, name: 'Пост 3', active: true, mechanic: 'Ковальчук Сергій' },
-      { id: 4, name: 'Пост 4', active: false, mechanic: '' },
+      { id: 1, name: 'Пост 1', active: true, mechanic: 'Коротунов Олександр' },
+      { id: 2, name: 'Пост 2', active: true, mechanic: 'Хрунов Денис' },
+      { id: 3, name: 'Пост 3', active: true, mechanic: 'Гук Максим' },
+      { id: 4, name: 'Пост 4', active: true, mechanic: 'Тарасенко Андрій' },
       { id: 5, name: 'Шиномонтажний', active: true, mechanic: '' },
-      { id: 6, name: 'Кузовний цех', active: true, mechanic: '' },
-      { id: 7, name: 'Мийка/Детейлінг', active: true, mechanic: '' }
+      { id: 6, name: 'Кузовний цех', active: true, mechanic: 'Кирилюк Сергій' },
+      { id: 7, name: 'Мийка/Детейлінг', active: true, mechanic: 'Гук Максим/Юшко Віталій' }
     ]
   }
 };
