@@ -36,7 +36,7 @@ let state = {
       { id: 2, name: 'Пост 2', active: true, mechanic: 'Хрунов Денис' },
       { id: 3, name: 'Детейлінг', active: true, mechanic: 'Гук Максим' },
       { id: 4, name: 'Пост 4', active: true, mechanic: 'Тарасенко Андрій' },
-      { id: 5, name: 'Малярний цех', active: true, mechanic: '' },
+      { id: 5, name: 'Малярний цех', active: true, mechanic: 'Вайгель Д.' },
       { id: 6, name: 'Кузовний цех', active: true, mechanic: 'Кирилюк Сергій' },
       { id: 7, name: 'Мийка', active: true, mechanic: 'Юшко Віталій' }
     ]
