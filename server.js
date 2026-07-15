@@ -21,24 +21,24 @@ let state = {
   settings: {
     naryads: [
       { code: 'TOZ0', desc: 'Технічне обслуговування', time: '30' },
-      { code: 'KUZ0', desc: 'Кузовний ремонт', time: '1:30' },
+      { code: 'BSZ0', desc: 'Кузовний ремонт', time: '9:00' },
       { code: 'SHIN', desc: 'Шиномонтаж', time: '45' },
-      { code: 'DET0', desc: 'Детейлінг', time: '2:00' },
-      { code: 'WASH', desc: 'Мийка Premium', time: '40' },
-      { code: 'PAIN', desc: 'Малярні роботи', time: '3:00' },
-      { code: 'DIAG', desc: 'Компʼютерна діагностика', time: '20' },
-      { code: 'ENG0', desc: 'Ремонт двигуна', time: '4:00' },
-      { code: 'BRAK', desc: 'Обслуговування гальм', time: '50' },
-      { code: 'SUSP', desc: 'Ремонт підвіски', time: '1:10' }
+      { code: 'DA00', desc: 'Встановлення додаткового обладнання', time: '1:30' },
+      { code: 'SW00', desc: 'Мийка Premium', time: '40' },
+      { code: 'WCZ0', desc: 'Гарантійний ремонт', time: '2:00' },
+      { code: 'PD00', desc: 'Предпродажна підготовка', time: '20' },
+      { code: 'DOZ0', desc: 'Встановлення додат.облад. СТО, time: '1:10' },
+      { code: 'RF00', desc: 'Ремонт авто співробітника' , time: '50' },
+      { code: 'RZOO', desc: 'Поточний ремонт', time: '1:00' }
     ],
     posts: [
       { id: 1, name: 'Пост 1', active: true, mechanic: 'Коротунов Олександр' },
       { id: 2, name: 'Пост 2', active: true, mechanic: 'Хрунов Денис' },
-      { id: 3, name: 'Пост 3', active: true, mechanic: 'Гук Максим' },
+      { id: 3, name: 'Детейлінг', active: true, mechanic: 'Гук Максим' },
       { id: 4, name: 'Пост 4', active: true, mechanic: 'Тарасенко Андрій' },
-      { id: 5, name: 'Шиномонтажний', active: true, mechanic: '' },
+      { id: 5, name: 'Малярний цех', active: true, mechanic: '' },
       { id: 6, name: 'Кузовний цех', active: true, mechanic: 'Кирилюк Сергій' },
-      { id: 7, name: 'Мийка/Детейлінг', active: true, mechanic: 'Гук Максим/Юшко Віталій' }
+      { id: 7, name: 'Мийка', active: true, mechanic: 'Юшко Віталій' }
     ]
   }
 };
